@@ -112,7 +112,7 @@ function updateStatus() {
 	
     var controller = controllers[j];
 	
-	if(controller.axes.length>1){
+	if(controller.axes.length==4){
 		usingGameController = true;
 	}
 	
@@ -145,8 +145,12 @@ function updateStatus() {
 	
 	var axis0 = 0;
     var axes = d.getElementsByClassName("axis");
+	//console.log(controller.axes.length);
     for (i = 0; (i+1) < controller.axes.length; i+=2) {
 		if(i>2){
+			break;
+		}
+		if(!usingGameController && i>1){
 			break;
 		}
 		var axesUpdated = false;
@@ -221,10 +225,13 @@ function updateStatus() {
 			}else if(controller.axes[count+i]<-0.5){
 				//axesVals[count] = -1;
 				tempVal = -1;
+				//console.log("axis negative! AxesSetNum: " + axesSetNum + ", count: " + count + ", tempNum: " + tempVal);
 			}
 			else{
+				
 				//axesVals[count] = 0;
 				tempVal = 0;
+				
 			}
 			if(/*axesVals[count]*/tempVal != prevVals[count]){
 				axesUpdated = true;
@@ -233,8 +240,10 @@ function updateStatus() {
 		}
 		
 		if(axesUpdated){
+			//console.log("axesSetNum: " + axesSetNum + ", axisDirs: " + axesDirs[0][0] + ", " + axesDirs[0][1] + ", " + axesDirs[1][0] + ", " + axesDirs[1][1])
 			//axesDirs[axesSetNum][0] = axesVals[0];
 			//axesDirs[axesSetNum][1] = axesVals[1];
+			
 			moveAxis(axesSetNum, axesDirs[axesSetNum][0], axesDirs[axesSetNum][1]);
 		}
 
@@ -393,8 +402,8 @@ function moveAxis(gamepad, xAxis, yAxis)//val_1, val_2)
 			}
 		}
 		if(cmd != ""){
-			console.log("aaa");
-			
+			console.log("sending cmd");
+			//console.log("axisDirs: " + axesDirs[0][0] + ", " + axesDirs[0][1] + ", " + axesDirs[1][0] + ", " + axesDirs[1][1])
 			var xmlhttp;
 			xmlhttp=new XMLHttpRequest();
 			xmlhttp.open("HEAD",action+cmd,true);
