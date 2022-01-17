@@ -13,9 +13,11 @@ body {
 h1 {
     color: #d4d4d4;
     border-style: solid;
-    border-radius: 5px;
+    border-radius: 7px;
     font-family: "Verdana", sans-serif;
     text-align: center;
+    margin-left: 30%;
+    margin-right: 30%;
 }
 
 p {
@@ -26,12 +28,8 @@ p {
 
 video {
     border: 3px #d4d4d4;
-    margin: auto;
+    border-style: solid;
+    border-radius: 7px;
+    margin-left: 33%;
     position: relative;
-}
-
-video.center {
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
 }
