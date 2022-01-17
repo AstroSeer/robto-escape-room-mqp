@@ -1,0 +1,33 @@
+#content {
+    padding:3px;
+}
+
+head {
+    background-color: #3b3b3b;
+}
+
+body {
+    background-color: #3b3b3b;
+}
+
+h1 {
+    color: #d4d4d4;
+    font-family: "Verdana", sans-serif;
+    text-align: center;
+}
+
+p {
+    color: #d4d4d4;
+    font-family: "Verdana", sans-serif;
+    text-align: center;
+}
+
+video {
+    border: 3px #d4d4d4;
+}
+
+video.center {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
