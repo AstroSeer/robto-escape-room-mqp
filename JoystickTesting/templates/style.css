@@ -12,6 +12,8 @@ body {
 
 h1 {
     color: #d4d4d4;
+    border-style: solid;
+    border-radius: 5px;
     font-family: "Verdana", sans-serif;
     text-align: center;
 }
@@ -24,6 +26,8 @@ p {
 
 video {
     border: 3px #d4d4d4;
+    margin: auto;
+    position: relative;
 }
 
 video.center {
