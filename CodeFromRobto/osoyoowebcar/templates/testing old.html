@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Page Title</title>
+</head>
+<body>
+<!-- <script language="javascript" type="text/javascript" src="/functions.js"></script>
+    <script language="javascript">
+		/*
+      function send_command(cmd) {
+        document.getElementById('hints').firstChild.nodeValue = "Send command: " + cmd;
+        AJAX_get('/?action=command&command='+ cmd)
+      }
+
+      function AJAX_response(text) {
+        document.getElementById('hints').firstChild.nodeValue = "Got response: " + text;
+      }*/
+
+    </script> -->
+
+<h1>My First Heading</h1>
+<p>My first paragraph.</p>
+<p id="demo"></p>
+
+<script>
+document.getElementById("demo").innerHTML = "Hello JavaScript!";
+
+//var gamepads = {};
+var haveEvents = 'ongamepadconnected' in window;
+var controllers = {};
+
+function connecthandler(e) {
+  addgamepad(e.gamepad);
+}
+
+function addgamepad(gamepad) {
+  controllers[gamepad.index] = gamepad; // adds GamePad gamepad to controllers array, in index of gamepad's index
+
+  var d = document.createElement("div");
+  d.setAttribute("id", "controller" + gamepad.index);
+
+  var t = document.createElement("h1");
+  t.appendChild(document.createTextNode("gamepad: " + gamepad.id));
+  d.appendChild(t);
+
+  var b = document.createElement("div");
+  b.className = "buttons";
+  for (var i = 0; i < gamepad.buttons.length; i++) {
+    var e = document.createElement("span");
+    e.className = "button";
+    //e.id = "b" + i;
+    e.innerHTML = i;
+    b.appendChild(e);
+  }
+
+  d.appendChild(b);
+
+  var a = document.createElement("div");
+  a.className = "axes";
+
+  for (var i = 0; i < gamepad.axes.length; i++) {
+    var p = document.createElement("progress");
+    p.className = "axis";
+    //p.id = "a" + i;
+    p.setAttribute("max", "2");
+    p.setAttribute("value", "1");
+    p.innerHTML = i;
+    a.appendChild(p);
+  }
+
+  d.appendChild(a);
+
+  // See https://github.com/luser/gamepadtest/blob/master/index.html
+  var start = document.getElementById("start");
+  if (start) {
+    start.style.display = "none";
+  }
+
+  document.body.appendChild(d);
+  requestAnimationFrame(updateStatus);
+}
+function disconnecthandler(e) {
+  removegamepad(e.gamepad);
+}
+
+function removegamepad(gamepad) {
+  var d = document.getElementById("controller" + gamepad.index);
+  document.body.removeChild(d);
+  delete controllers[gamepad.index];
+}
+
+function updateStatus() {
+  if (!haveEvents) {
+    scangamepads();
+  }
+
+  var i = 0;
+  var j;
+
+  for (j in controllers) {
+    var controller = controllers[j];
+    var d = document.getElementById("controller" + j);
+    var buttons = d.getElementsByClassName("button");
+
+    for (i = 0; i < controller.buttons.length; i++) {
+      var b = buttons[i];
+      var val = controller.buttons[i];
+      var pressed = val == 1.0;
+      if (typeof(val) == "object") {
+        pressed = val.pressed;
+        val = val.value;
+      }
+
+      var pct = Math.round(val * 100) + "%";
+      b.style.backgroundSize = pct + " " + pct;
+
+      if (pressed) {
+        b.className = "button pressed";
+      } else {
+        b.className = "button";
+      }
+    }
+	var axis0 = 0;
+    var axes = d.getElementsByClassName("axis");
+    for (i = 0; i < controller.axes.length; i++) {
+      var a = axes[i];
+      a.innerHTML = i + ": " + controller.axes[i].toFixed(4);
+      a.setAttribute("value", controller.axes[i] + 1);
+	  //if(i == 0){
+		if(controller.axes[i]>0.2){
+			if(i == 0){
+				axis0 = 1;
+			}else if(i==1){
+				moveAxis(j, axis0, 1);//forward();
+			}
+		}else if(controller.axes[i]<-0.2){
+			if(i == 0){
+				axis0 = -1;
+			}else if(i == 1){
+				moveAxis(j, axis0, -1);//backward();
+			}
+		}
+		else{
+			if(i == 1){
+				moveAxis(j, axis0, 0);
+			}
+		}
+	  //}
+    }
+  }
+
+  requestAnimationFrame(updateStatus);
+}
+
+function scangamepads() {
+  var gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads() : []);
+  for (var i = 0; i < gamepads.length; i++) {
+    if (gamepads[i]) {
+      if (gamepads[i].index in controllers) {
+        controllers[gamepads[i].index] = gamepads[i];
+      } else {
+        addgamepad(gamepads[i]);
+      }
+    }
+  }
+}
+
+window.addEventListener("gamepadconnected", connecthandler);
+window.addEventListener("gamepaddisconnected", disconnecthandler);
+
+if (!haveEvents) {
+ setInterval(scangamepads, 500);
+}
+
+var xmlhttp;
+xmlhttp=new XMLHttpRequest();
+/*function forward()
+{
+	xmlhttp.open("GET","move/forward",true);
+	xmlhttp.send();
+}*/
+function moveAxis(gamepad, yAxis, xAxis)
+{	
+	/*const one = 'Hello, ';
+	const two = 'how are you?';
+	const joined = `${one}${two}`;
+	console.log(joined); // "Hello, how are you?"
+	
+	const action;*/
+	if(gamepad == 0){
+		//action = "move/";
+	//use strings to modify the xmlhttp.open call; 
+	//if gamepad == 0, "move", else if gamepad == 1, "camera"
+	//cam might be able to have each axis called separately, maybe. not sure
+	}else if(gamepad == 1){
+		//action = "camera/";
+	}
+	
+	
+	
+	if(gamepad == 0){
+		if(yAxis == 1){
+			if(xAxis == 1){//forward right(?)
+				xmlhttp.open("GET","move/for_right",true);
+				xmlhttp.send();
+			}else if(xAxis == -1){//forward left(?)
+				xmlhttp.open("GET","move/for_left",true);
+				xmlhttp.send();
+			}else{//forward
+				xmlhttp.open("GET","move/forward",true);
+				xmlhttp.send();
+			}
+		}else if(yAxis == -1){
+			if(xAxis == 1){//backward right(?)
+				xmlhttp.open("GET","move/back_right",true);
+				xmlhttp.send();
+			}else if(xAxis == -1){//backward left(?)
+				xmlhttp.open("GET","move/back_left",true);
+				xmlhttp.send();
+			}else{//backward
+				xmlhttp.open("GET","move/back",true);
+				xmlhttp.send();
+			}
+		}else{
+			if(xAxis == 1){//turn right(?)
+				xmlhttp.open("GET","move/right",true);
+				xmlhttp.send();
+			}else if(xAxis == -1){//turn left(?)
+				xmlhttp.open("GET","move/left",true);
+				xmlhttp.send();
+			}else{//centered
+				xmlhttp.open("GET","move/center",true);
+				xmlhttp.send();
+			}
+		}
+	}
+}
+/*
+function gamepadHandler(event, connecting) {
+  var gamepad = event.gamepad;
+  // Note:
+  // gamepad === navigator.getGamepads()[gamepad.index]
+
+  if (connecting) {
+    gamepads[gamepad.index] = gamepad;
+	//console.log("Gamepad connected from index %d: %s",
+		//gamepad.index, gamepad.id);
+	var gp = navigator.getGamepads()[gamepad.index];
+	console.log("Gamepad connected at index %d: %s. %d buttons, %d axes.",
+		gp.index, gp.id,
+		gp.buttons.length, gp.axes.length);
+	//gameLoop();
+  } else {
+    delete gamepads[gamepad.index];
+	console.log("Gamepad disconnected from index %d: %s",
+    gamepad.index, gamepad.id);
+  }
+}
+/*
+	Chrome does things differently here. Instead of constantly storing the gamepad's latest state in a variable 
+	it only stores a snapshot, so to do the same thing in Chrome you have to keep polling it and then only use the 
+	Gamepad object in code when it is available. We have done this below using setInterval();
+	once the object is available the gamepad info is outputted, the game loop is started, and the interval is cleared using clearInterval. 
+	Note that in older versions of Chrome Navigator.getGamepads() is implemented with a webkit prefix. We attempt to detect and handle both 
+	the prefixed version and the standard version of the function for backwards compatibility.
+* /
+window.addEventListener("gamepadconnected", function(e) { gamepadHandler(e, true); }, false);
+window.addEventListener("gamepaddisconnected", function(e) { gamepadHandler(e, false); }, false);*/
+</script>
+
+
+
+
+
+
+
+</body>
+</html>

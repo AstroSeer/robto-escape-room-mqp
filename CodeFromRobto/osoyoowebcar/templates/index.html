@@ -1,0 +1,142 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+body {background-color: lightyellow}
+h1 {color:blue}
+
+button {
+	color: blue;
+	background:lightgrey;
+	border: 1px solid #000;
+	border-radius: 8px;
+	position: center;
+}
+.slidecontainer {
+  width: 100%; /* Width of the outside container */
+}
+</style>
+</head>
+<body>
+<div style="text-align:center">
+
+<h1> OSOYOO Web Car in Raspberry Pi</h1>
+<br><br>
+
+<div class="slidecontainer">
+  <p>Camera Direction Slider</p>
+  Left<input type="range" min="1" max="179" value="90" id="myRange">Right<br>
+  <div id="demo"></div>
+  
+</div>
+
+<br><br>
+<iframe src="http://130.215.12.80:8899/?action=stream" frameborder="0" align="middle" width="640" height="480" align="middle" scrolling="no"></iframe>
+<br><br>
+ 
+<br><br>
+
+<span style="display:inline-block;padding:5px;border:1px solid #fc0; font-size: 140%;font-weight: bold;">
+	<br>
+	<button style="height: 75px; width: 75px" onclick="forward()"><img style="height: 65px"src="/static/images/forward.png"></button>
+	<br><br><br><br>
+	<img hspace="10" style="padding-left: 5px">
+	<button style="height: 75px; width: 75px" onclick="left()"><img style="height: 65px"src="/static/images/left.png"></button>
+	<img hspace="20" style="padding-left: 10px">
+	<button style="height: 75px; width: 75px" onclick="stop()"><img style="height: 63px"src="/static/images/stop.png"></button>
+	<img hspace="20" style="padding-left: 10px">
+	<button style="height: 75px; width: 75px" onclick="right()"><img style="height: 65px"src="/static/images/right.png"></button>
+	<img hspace="10" style="padding-left: 5px">
+	<br><br><br><br>
+	<button style="height: 75px; width: 75px" onclick="reverse()"><img style="height: 65px"src="/static/images/reverse.png"></button>
+	<br><br><br>
+
+	<p>Motor speed control</p>
+	<img hspace="30" style="padding-left: 5px">
+	<button style="height: 50px; width: 50px; font-size: 18px" onclick="nospeed()">0</button>
+	<img hspace="30" style="padding-left: 20px">
+	<button style="height: 50px; width: 50px; font-size: 18px" onclick="lowspeed()">--</button>
+	<img hspace="30" style="padding-left: 20px">
+	<button style="height: 50px; width: 50px; font-size: 18px" onclick="regularspeed()">==</button>
+	<img hspace="30" style="padding-left: 20px">
+	<button style="height: 50px; width: 50px; font-size: 18px" onclick="highspeed()">++</button>
+	<img hspace="30" style="padding-left: 5px">
+	<br><br>
+</span>
+<br><br>
+
+<script>
+var xmlhttp;
+xmlhttp=new XMLHttpRequest();
+
+ 
+function forward()
+{
+	xmlhttp.open("GET","move/forward",true);
+	xmlhttp.send();
+}
+function stop()
+{
+	xmlhttp.open("GET","move/stopcar",true);
+	xmlhttp.send();
+}
+function left()
+{
+	xmlhttp.open("GET","move/turnleft",true);
+	xmlhttp.send();
+}
+function right()
+{
+	xmlhttp.open("GET","move/turnright",true);
+	xmlhttp.send();
+}
+function reverse()
+{
+	xmlhttp.open("GET","move/backward",true);
+	xmlhttp.send();
+}
+
+function lowspeed()
+{
+	xmlhttp.open("GET","speed/low",true);
+	xmlhttp.send();
+}
+function regularspeed()
+{
+	xmlhttp.open("GET","speed/regular",true);
+	xmlhttp.send();
+}
+function highspeed()
+{
+	xmlhttp.open("GET","speed/high",true);
+	xmlhttp.send();
+}
+function nospeed()
+{
+	xmlhttp.open("GET","speed/zero",true);
+	xmlhttp.send();
+}
+function viewleft()
+{
+	xmlhttp.open("GET","view/left",true);
+	xmlhttp.send();
+}
+function viewright()
+{
+	xmlhttp.open("GET","view/right",true);
+	xmlhttp.send();
+}
+  
+var slider = document.getElementById("myRange");
+var output = document.getElementById("demo");
+output.innerHTML = slider.value; // Display the default slider value
+
+//Update the current slider value (each time you drag the slider handle)
+slider.oninput = function() {
+  var dgr=180-this.value;
+  output.innerHTML = dgr.toString()+"°";
+  xmlhttp.open("GET","camera/"+this.value,true);
+  xmlhttp.send();
+}
+</script>
+</body>
