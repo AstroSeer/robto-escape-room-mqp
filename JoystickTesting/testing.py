@@ -1,14 +1,15 @@
 from __future__ import division
 import time
 import flask
+from flask import Response
 import threading
 import atexit
-
+import RobtoCamTest
 # Import the PCA9685 module.
 #import Adafruit_PCA9685
 from flask import Flask, render_template, request, send_from_directory
 #import RPi.GPIO as GPIO
-pi_ip_address='localhost'#'localhost'#'0.0.0.0'#'192.168.0.32' # replace 192.168.0.107 with your Raspberry Pi IP address
+pi_ip_address='localhost'#'130.215.9.186' #'0.0.0.0'#'192.168.0.32' # replace 192.168.0.107 with your Raspberry Pi IP address
 # Initialise the PCA9685 using the default address (0x40).
 #pwm = Adafruit_PCA9685.PCA9685()
 #pwm.set_pwm_freq(60)
@@ -60,8 +61,11 @@ class CarDirection(Enum):
     TURN_LEFT = 7
     FOR_LEFT = 8
     
+class Button(Enum):
+    OFF = 0
+    ON = 1
 
-
+cam = RobtoCamTest.Camera()
 #pi_ip_address='130.215.222.182' # replace 192.168.0.107 with your Raspberry Pi IP address
 #pwm = Adafruit_PCA9685.PCA9685() # Initialise the PCA9685 using the default address (0x40).
 #pwm.set_pwm_freq(60)
@@ -91,7 +95,7 @@ maxRight = 120
 maxLeft = 550
 maxUp = 190
 maxDown = 424
-step = 20
+step = 3#20
 
 #initialize GPIO status variables
 #IN1Sts = 0
@@ -101,88 +105,24 @@ step = 20
 #IN4Sts = 0
 #ENBSts = 0
 
-#key = pyglet.window.key
-#window = pyglet.window.Window()
 
-#label = pyglet.text.Label('Hello, world',
-                          #font_name='Times New Roman',
-                          #font_size=36,
-                          #x=window.width//2, y=window.height//2,
-                          #anchor_x='center', anchor_y='center')
-
-#@window.event
-#def on_draw():
-#     window.set_visible(False)
-   # window.clear()
-    #label.draw()
-
-# @window.event
-# def on_key_press(symbol, modifiers):
-    # global forwards, backwards, right, left, camright, camleft, camup, camdown, camcenter, label
-    # try:            
-        # if symbol == key.W:
-            # forwards = 1
-        # elif symbol == key.A:
-            # left = 1
-        # elif symbol == key.S:
-            # backwards = 1
-        # elif symbol == key.D:
-            # right = 1
-        # elif symbol == key.RIGHT: #turn servo right
-            # camright = 1
-        # elif symbol == key.LEFT:#turn servo left
-            # camleft = 1
-        # elif symbol == key.UP:    #center camera
-            # camup = 1
-        # elif symbol == key.DOWN:
-            # camdown = 1
-        # elif symbol == key.ENTER:
-            # camcenter = 1
-
-    # except AttributeError:
-       # print('')
-        
-# @window.event
-# def on_key_release(symbol, modifiers):
-    # global forwards, backwards, right, left, running, camright, camleft, camup,camdown, camcenter
-    # try:
-        # if symbol == key.ESCAPE:
-            # running = False
-            # return False
-        # elif symbol == key.W:
-            # forwards = 0
-        # elif symbol == key.A:
-            # left = 0
-        # elif symbol == key.S:
-            # backwards = 0
-        # elif symbol == key.D:
-            # right = 0
-        # elif symbol == key.RIGHT: #turn servo right
-            # camright = 0
-        # elif symbol == key.LEFT:#turn servo left
-           # camleft = 0
-        # elif symbol == key.UP: #center camera
-            # camup = 0
-        # elif symbol == key.DOWN:
-            # camdown = 0
-        # elif symbol == key.ENTER:
-            # camcenter = 0
-        
-    # except AttributeError:
-        # print('')
-        
         
         
 def changespeed(speed):
     print("changeSpeed")
     #pwm.set_pwm(ENB, 0, speed)
-    #pwm.set_pwm(ENA, 0, int(speed*.8))
+    #pwm.set_pwm(ENA, 0, int(speed*.95))
 
 # Define motor control  pins as output
 # GPIO.setup(IN1, GPIO.OUT)   
 # GPIO.setup(IN2, GPIO.OUT) 
 # GPIO.setup(IN3, GPIO.OUT)   
 # GPIO.setup(IN4, GPIO.OUT) 
+
+
+#todo: make a hashmap/hashtable thing, for inputs from html file
+#e.g.: "elif cmd=='back_right':", replace long "if else" statements like these
+
 
 def stopcar():
     #print("stopping car")
@@ -312,7 +252,7 @@ carDir = CarDirection.NONE.value
 camDirX = CamDirection.NONE.value
 camDirY = CamDirection.NONE.value
 cam_center = False
-
+buttonVals = [0,0,0,0,0,0,0,0,0]
 # forwards = 0
 # backwards = 0
 # left = 0
@@ -378,10 +318,63 @@ app = Flask(__name__, static_url_path='')
 def hello():
    return render_template('testing.html')#render_template('testing.html')
    
+@app.route("/data")
+def recieve1():#buttonvals,moveAxesVal,camAxesVals):
+    global carDir, camDirX, camDirY, buttonVals
+    tempCar = int(request.args.get('car'))
+    if(tempCar>=0 and tempCar <=8):#check if valid
+        carDir = tempCar
+    #print(carDir)
+    tempCams = request.args.get('cam')
+    tempCamsX = int(tempCams[0])
+    tempCamsY = int(tempCams[1])
+    if(True): #check if valid
+        camDirX = tempCamsX
+        camDirY = tempCamsY
+    #print("X: " + str(tempCamsX) + ", Y: " + str(tempCamsY))
+    
+    tempButtons = request.args.get('buttons')
+    if(len(tempButtons) == 9):
+        for i in range(9):
+            butVal = int(tempButtons[i])
+            if(butVal == 0 or butVal == 1):
+                buttonVals[i] = butVal
+                #print(str(buttonVals[i]))
+    #print("recieved")
+    return render_template('testing.html')
+    
+@app.route("/<buttonvals>/<moveAxesVal>/<camAxesVals>")
+def recieve(buttonvals,moveAxesVal,camAxesVals):
+    #print("recieved")
+    return render_template('testing.html')
+
+
+#buttonvals will be 9 digits, either 0 or 1, in button order. 
+    #nothing in between. eg "010101010"
+    #can do a for loop, 0-9, take the value at each index of the string, 
+    #then interpret each as an int and compare against current button values
+    
+#moveAxesVal is an int between 0-8, 
+    #matches CarDirection enum
+
+#camAxesVals is 2 ints, not separated by spaces,
+    #first is x axis, either 0, 1, or 2.
+    #second is y axis, either 0, 3, or 4.
+    #matches CamDirection enum
+    
+    
+
+#todo: interpret on this end (as well) if button is being pressed again, 
+#or if just being held down 
+#(when repeatedly sent the same button press without the button release in between; 
+#just check if its already the val being sent)
 @app.route("/<action>/<cmd>")
 def action(action,cmd):
+    return render_template('testing.html')
     global carDir
     if action=='camera':
+    #with new implementation, simply set camDirX to enum of direction of camAxesX,
+        #and the same with camDirY and camAxesY
         if cmd=='forward':
             camDirX = CamDirection.NONE.value
             camDirY = CamDirection.UP.value
@@ -474,6 +467,14 @@ def action(action,cmd):
 
     return render_template('testing.html')#render_template('testing.html')
     
+    
+@app.route('/video_feed')
+def video_feed():
+    #Video streaming route. Put this in the src attribute of an img tag
+    return Response(cam.start(), mimetype='multipart/x-mixed-replace; boundary=frame')
+        
+        
+        
 # def hello(self):
     # print("hello, Timer")
     # t = threading.Timer(3.0, hello)

@@ -1,9 +1,20 @@
 <!DOCTYPE html>
 <html>
 <head>
+<!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
 <title>Page Title</title>
 </head>
 <body>
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8  offset-lg-2">
+            <img src="video_feed" width="100%"><!--multipart/x-mixed-replace; boundary=frame-->
+        </div>
+    </div>
+</div>
 <!-- <script language="javascript" type="text/javascript" src="/functions.js"></script>
     <script language="javascript">
 		/*
@@ -28,10 +39,14 @@ document.getElementById("demo").innerHTML = "Hello JavaScript!";
 //var gamepads = {};
 var haveEvents = 'ongamepadconnected' in window;
 var controllers = {};
+var countPrint = 0;
+var valsUpdatedGlob = false;
+var updateLoopCount = 0;
+var updateLoopMax = 2;//1;//5;
 
 var axesDirs = [[0,0],[0,0]];
 //var camAxisDirs = [0,0];
-
+var buttonVals = [0,0,0,0,0,0,0,0,0];//9 buttons
 function connecthandler(e) {
   addgamepad(e.gamepad);
 }
@@ -83,10 +98,14 @@ function addgamepad(gamepad) {
   requestAnimationFrame(updateStatus);
 }
 function disconnecthandler(e) {
+	
   removegamepad(e.gamepad);
 }
 
 function removegamepad(gamepad) {
+	axesDirs = [[0,0],[0,0]];
+	buttonVals = [0,0,0,0,0,0,0,0,0];
+	sendVals();
   var d = document.getElementById("controller" + gamepad.index);
   document.body.removeChild(d);
   delete controllers[gamepad.index];
@@ -100,9 +119,10 @@ function updateStatus() {
   
   var i = 0;
   var j;
-	
+	var valsUpdated = false;
 	var usingGameController = false;
-
+	var buttonNum = 0;
+	//var buttonsUpdated = false;
   for (j in controllers) {
 	if(usingGameController && j>0){
 		break;
@@ -115,6 +135,7 @@ function updateStatus() {
 	if(controller.axes.length==4){
 		usingGameController = true;
 	}
+	//just checks for 4 axis to see if its a game controller
 	
 	
     var d = document.getElementById("controller" + j);
@@ -122,7 +143,63 @@ function updateStatus() {
 
 
 	//buttons
-    for (i = 0; i < controller.buttons.length; i++) {
+	
+	//todo: need to account for gamepad vs physical interface
+	
+	//for physical interface,
+	//need to account for some buttons being on one "controller"
+	//and some being on the other
+	
+	//physical interface:
+	//9 buttons
+	//left controller: 3 buttons
+	//right controller: 6 buttons
+	
+	
+	//for now: assuming game controller
+	//will break if use physical 
+	
+	
+	/*xbox button layout: (expand to see)
+	//a = 0
+	//b = 1
+	//x = 2
+	//y = 3
+	//left bumper = 6
+	//right bumper = 5
+	//left trigger = 6
+	//right trigger = 7
+	//select = 8
+	//start = 9
+	//click left stick = 10
+	//click right stick = 11
+	//dpad up = 12
+	//dpad down = 13
+	//dpad left = 14
+	//dpad right = 15
+	//home = 16
+	*/
+	
+	//wait, does the physical interface even have "buttons", 
+	//or does it treat them all as axes?
+	//if the latter, need to rework code in axes part to account for this
+	
+	
+	//todo: tell when a button val has changed (like with axes), to know when to send message
+    //axesUpdated, but for buttons
+	
+	
+	//todo: tell when axes or buttons updated, updated variable
+	//after, work out how to differentiate button press from toggle from hold on this end?
+	for (i = 0; i < controller.buttons.length; i++) {
+		if(!usingGameController && ((i > 2 && j == 0) || (i >5 && j == 1))){
+			//left joystick: movement, 3 buttons.
+			//right joystick: camera, 6 buttons.
+			break;
+		}else if(usingGameController && i>8){
+			break;
+		}
+		//console.log(controller.buttons.length); game controller: 17
       var b = buttons[i];
       var val = controller.buttons[i];
       var pressed = val == 1.0;
@@ -133,19 +210,36 @@ function updateStatus() {
 
       var pct = Math.round(val * 100) + "%";
       b.style.backgroundSize = pct + " " + pct;
-
+		var tempButtonVal = 0;
       if (pressed) {
+		tempButtonVal = 1;
         b.className = "button pressed";
       } else {
+		tempButtonVal = 0;
         b.className = "button";
       }
+	  if(buttonVals[buttonNum] != tempButtonVal){
+		//console.log("button val: " + buttonVals[buttonNum] + ", tempButtonVal: " + tempButtonVal);
+		valsUpdated = true;
+		valsUpdatedGlob = true;
+	  }
+	  buttonVals[buttonNum] = tempButtonVal;
+	  buttonNum+=1;
     }
+	/*countPrint+=1;
+	if(countPrint == 100){//prints once every 100 loops
+		countPrint = 0;
+		//console.log("button values: " + buttonVals);
+		//console.log(buttonVals.join('') + '/' + axesDirs[0].join(' ') + '/' + axesDirs[1].join(' ')); //creates a string out of array
+
+	}*/
 	
-	
+	//axes
 	
 	var axis0 = 0;
     var axes = d.getElementsByClassName("axis");
 	//console.log(controller.axes.length);
+	//break;
     for (i = 0; (i+1) < controller.axes.length; i+=2) {
 		if(i>2){
 			break;
@@ -153,7 +247,7 @@ function updateStatus() {
 		if(!usingGameController && i>1){
 			break;
 		}
-		var axesUpdated = false;
+		//var axesUpdated = false;
 		//var movAxesUpdate = false;
 		/*if(i>1){
 			if(i>3 || j>0){
@@ -234,18 +328,20 @@ function updateStatus() {
 				
 			}
 			if(/*axesVals[count]*/tempVal != prevVals[count]){
-				axesUpdated = true;
+				//axesUpdated = true;
+				valsUpdated = true;
+				valsUpdatedGlob = true;
 				axesDirs[axesSetNum][count] = tempVal;
 			}
 		}
 		
-		if(axesUpdated){
+		/*if(axesUpdated){
 			//console.log("axesSetNum: " + axesSetNum + ", axisDirs: " + axesDirs[0][0] + ", " + axesDirs[0][1] + ", " + axesDirs[1][0] + ", " + axesDirs[1][1])
 			//axesDirs[axesSetNum][0] = axesVals[0];
 			//axesDirs[axesSetNum][1] = axesVals[1];
 			
 			moveAxis(axesSetNum, axesDirs[axesSetNum][0], axesDirs[axesSetNum][1]);
-		}
+		}*/
 
 
 		//if(j == 0){// && i<2){//movement
@@ -301,7 +397,38 @@ function updateStatus() {
 	  
     }
   }
+	/*if(buttonsUpdated){
+	
+		console.log(buttonVals.join('') + '/' + axesDirs[0].join('') + '/' + axesDirs[1].join('')); //creates a string out of array
+	}*/
 
+	//updateLoopCount+=1;
+	/*
+	if(false && updateLoopCount == updateLoopMax){//updates once every 5 loops
+		updateLoopCount = 0;
+		if(valsUpdatedGlob){
+			sendVals();
+			valsUpdatedGlob = false;
+		}
+		//console.log("button values: " + buttonVals);
+		//console.log(buttonVals.join('') + '/' + axesDirs[0].join(' ') + '/' + axesDirs[1].join(' ')); //creates a string out of array
+
+	}*/
+	
+	if(valsUpdated){
+		//console.log(buttonVals.join('') + '/' + axesDirs[0].join('') + '/' + axesDirs[1].join('')); //creates a string out of array
+		sendVals();
+		// make it so that can only send vals once every 5 loops? 
+		//as in, always counting, can only send on the fifth loop, but still stores values on the other 4
+		//that way, pressing a button and then another button within 4 loops would only send 1 update, with both button updates 
+		//if pressed and let go within the 5 loop period, input is removed, but nobody needs to press it that fast? 
+		//could cause weird delay with axes though, 0-4 loop delay.
+		//maybe only implement this if there ends up being too many requests sent.
+		//CAN ALSO PLAYTEST DIFFERENT VERSIONS, one with this delay implemented, one without
+		//if neither works, look into hosting on a web server? can handle requests much faster. flask freeze, host on github?
+	
+	}
+	//console.log(" ");
   requestAnimationFrame(updateStatus);
 }
 
@@ -331,8 +458,176 @@ if (!haveEvents) {
 	xmlhttp.open("GET","move/forward",true);
 	xmlhttp.send();
 }*/
+
+/*
+for button values,
+console.log(buttonVals.join(''); //creates a string out of array
+can join the button vals into a string, then send the string to the python file
+can also do this with axes! and instead of "for_right" and whatnot,
+just send the numbers, (all values, axes and buttons) as a string,
+can parse in python file by just determining the values at each index of the string
+
+*********************************************************************
+e.g. cmd = buttonVals.join('') + axesDirs[0].join('')+axesDirs[1].join('');
+*********************************************************************
+need to adjust for the action var
+make a new "moveAxis" function, sendVals
+
+alternatively, maybe can figure out direction on the html end
+ (eg for_right for move, center for camx and up for camy),
+then pass the enum value to the python file? so less data to pass?
+	also wouldn't have to deal with possibility of multiple directions at once?
+
+*/
+
+function sendVals(){
+	//moveAxis(0,0,0);
+	//return;
+	// cmd = buttonVals.join('') + axesDirs[0].join('')+axesDirs[1].join('');
+	//console.log("sending vals: " + buttonVals.join('') + '/' + axesDirs[0].join(' ') + '/' + axesDirs[1].join(' ')); //creates a string out of array
+	//maybe have html determine movement axes values, send that (e.g. send "2" for FOR_RIGHT, etc)
+	//instead of having python file determine it on python's end?
+	//only need for carDirection
+/*
+class CarDirection(Enum):
+    NONE = 0
+    FORWARD = 1
+    FOR_RIGHT = 2
+    TURN_RIGHT = 3
+    BACK_RIGHT = 4
+    BACK = 5
+    BACK_LEFT = 6
+    TURN_LEFT = 7
+    FOR_LEFT = 8
+*/
+
+	//Y is inverted?
+	var carDir = 0;
+	switch(axesDirs[0][1]){
+		case -1://forward Y
+			switch(axesDirs[0][0]){
+				case 1: //forward right(?)
+					carDir = 2;
+					break;
+				case -1: //forward left(?)
+					carDir = 8;
+					break;
+				case 0: //forward
+					carDir = 1;
+					break;
+				default:
+					console.log("wrong axis value!");
+			}
+			break;
+		case 1://backward Y
+			switch(axesDirs[0][0]){
+				case 1: //backward right(?)
+					carDir = 4;
+					break;
+				case -1: //backward left(?)
+					carDir = 6;
+					break;
+				case 0: //backward
+					carDir = 5;
+					break;
+				default:
+					console.log("wrong axis value!");
+			}
+			break;
+		case 0://neutral Y
+			switch(axesDirs[0][0]){
+				case 1: //turn right(?)
+					carDir = 3;
+					break;
+				case -1: //turn left(?)
+					carDir = 7;
+					break;
+				case 0: //centered
+					carDir = 0;
+					break;
+				default:
+					console.log("wrong axis value!");
+			}
+			break;
+		default:
+			console.log("wrong axis value!");
+	}		
+	
+/*
+class CamDirection(Enum):
+    NONE = 0
+    RIGHT = 1
+    LEFT = 2
+    UP = 3
+    DOWN = 4
+*/
+	var camDir = [0,0];
+	switch(axesDirs[1][0]){
+		case 1: //right
+			camDir[0] = 1;
+			break;
+		case -1://left
+			camDir[0] = 2;
+			break;
+		case 0://none
+			camDir[0] = 0;
+			break;
+		default:
+			console.log("wrong axis value!");
+	}
+	
+	switch(axesDirs[1][1]){
+		case -1: //up
+			camDir[1] = 3;
+			break;
+		case 1://down
+			camDir[1] = 4;
+			break;
+		case 0://none
+			camDir[1] = 0;
+			break;
+		default:
+			console.log("wrong axis value!");
+	}	
+	//console.log("sending vals: " + buttonVals.join('') + '/' + axesDirs[0].join(' ') + "(carDir: " + carDir + ")" + '/' + axesDirs[1].join(' ') + " camDir: " + camDir.join('')); //creates a string out of array
+	var message = "buttons=" + buttonVals.join('') + "&car=" + carDir + "&cam=" + camDir.join('');
+	console.log("sending vals: " + message);//.join('') + '/' + carDir + '/' + camDir.join('')); //creates a string out of array
+	
+	//first 9 values: button vals, in order
+	//then a /
+	//then car direction enum
+	//then a /
+	//then x and y cam direction enums, no spaces between.
+	var xmlhttp;
+	xmlhttp=new XMLHttpRequest();
+	xmlhttp.open("HEAD","/data?" + message,true);
+	xmlhttp.onerror = checkData;
+	
+	function checkData()
+	{
+		/*xmlhttp.open("HEAD",action+cmd,true);
+		xmlhttp.onerror=null;*/ //for if request failed, 
+		//so means robot didn't recieve data?
+		//need to test on robot.
+		console.log(xmlhttp.readyState);
+		if(xmlhttp.readyState == 4){
+			//axesDirs[gamepad][0] = xAxis;
+			//axesDirs[gamepad][1] = yAxis;
+		}
+		
+	}
+	xmlhttp.timeout = 600;
+	xmlhttp.ontimeout = blah;
+	xmlhttp.send();
+
+
+
+	//moveAxis(0,0,0);
+}
+
 function moveAxis(gamepad, xAxis, yAxis)//val_1, val_2)
 {	
+	//return;
 	/*const one = 'Hello, ';
 	const two = 'how are you?';
 	const joined = `${one}${two}`;
@@ -402,7 +697,7 @@ function moveAxis(gamepad, xAxis, yAxis)//val_1, val_2)
 			}
 		}
 		if(cmd != ""){
-			console.log("sending cmd");
+			//console.log("sending cmd");
 			//console.log("axisDirs: " + axesDirs[0][0] + ", " + axesDirs[0][1] + ", " + axesDirs[1][0] + ", " + axesDirs[1][1])
 			var xmlhttp;
 			xmlhttp=new XMLHttpRequest();
@@ -535,7 +830,47 @@ window.addEventListener("gamepadconnected", function(e) { gamepadHandler(e, true
 window.addEventListener("gamepaddisconnected", function(e) { gamepadHandler(e, false); }, false);*/
 </script>
 
+<style>
+.axes {
+  padding: 1em;
+}
 
+.buttons {
+  margin-left: 1em;
+}
+
+/*meter*/.axis {
+  min-width: 200px;
+  margin: 1em;
+}
+
+.button {
+  display: inline-block;
+  width: 1em;
+  text-align: center;
+  padding: 1em;
+  border-radius: 20px;
+  border: 1px solid black;
+  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAAXNSR0IArs4c6QAAAAxJREFUCNdjYPjPAAACAgEAqiqeJwAAAABJRU5ErkJggg==);
+  background-size: 0% 0%;
+  background-position: 50% 50%;
+  background-repeat: no-repeat;
+}
+
+.pressed {
+  border: 1px solid red;
+}
+
+.touched::after {
+  content: "touch";
+  display: block;
+  position: absolute;
+  margin-top: -0.2em;
+  margin-left: -0.5em;
+  font-size: 0.8em;
+  opacity: 0.7;
+}
+</style>
 
 
 
