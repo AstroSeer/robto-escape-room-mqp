@@ -6,13 +6,18 @@ import threading
 import atexit
 import RobtoCamTest
 # Import the PCA9685 module.
-#import Adafruit_PCA9685
+#import Adafruit_PCA9685 #--- add back in
 from flask import Flask, render_template, request, send_from_directory
-#import RPi.GPIO as GPIO
+#import RPi.GPIO as GPIO #--- add back in
+
+
 pi_ip_address='localhost'#'130.215.9.186' #'0.0.0.0'#'192.168.0.32' # replace 192.168.0.107 with your Raspberry Pi IP address
+
 # Initialise the PCA9685 using the default address (0x40).
-#pwm = Adafruit_PCA9685.PCA9685()
-#pwm.set_pwm_freq(60)
+#pwm = Adafruit_PCA9685.PCA9685() #--- add back in
+#pwm.set_pwm_freq(60)#--- add back in
+
+
 
 #TODO
 #make robot keep checking its values for how to move. use python time???
@@ -31,15 +36,7 @@ pi_ip_address='localhost'#'130.215.9.186' #'0.0.0.0'#'192.168.0.32' # replace 19
 # Osoyoo Raspberry Pi Web Camera Control Robot Car
 # tutorial url: https://osoyoo.com/?p=32066
 
-# from __future__ import division
-# import time
-# import curses
-# #from pynput import keyboard
-# import Adafruit_PCA9685 # Import the PCA9685 module.
-# from flask import Flask, render_template, request
-# import RPi.GPIO as GPIO
-# import pyglet   #
-# import subprocess
+
 from enum import Enum
 
 class CamDirection(Enum):
@@ -66,25 +63,31 @@ class Button(Enum):
     ON = 1
 
 cam = RobtoCamTest.Camera()
-#pi_ip_address='130.215.222.182' # replace 192.168.0.107 with your Raspberry Pi IP address
-#pwm = Adafruit_PCA9685.PCA9685() # Initialise the PCA9685 using the default address (0x40).
-#pwm.set_pwm_freq(60)
+#with this variable cam, can access the object's properties
+    #in order to get the information from the vision processing code
 
-#app = Flask(__name__)
-#GPIO.setmode(GPIO.BCM) # GPIO number  in BCM mode
-#GPIO.setwarnings(False)
-#define actuators GPIOs
-#IN1 = 23
-#IN2 = 24
-#IN3 = 27
-#IN4 = 22
-#ENA = 0  #Right motor speed PCA9685 port 0
-#ENB = 1  #Left motor speed PCA9685 port 1
-#move_speed = 1800  # Max pulse length out of 4096
-#turn_speed = 1500
-# servo_lft = 500 #ultrasonic sensor facing right
+
+
+#app = Flask(__name__) #keep commented
+
+
+#GPIO.setmode(GPIO.BCM) # GPIO number  in BCM mode #--- add back in
+#GPIO.setwarnings(False) #--- add back in
+#define actuators GPIOs #--- add back in
+#IN1 = 23 #--- add back in
+#IN2 = 24 #--- add back in
+#IN3 = 27 #--- add back in
+#IN4 = 22 #--- add back in
+#ENA = 0  #Right motor speed PCA9685 port 0 #--- add back in
+#ENB = 1  #Left motor speed PCA9685 port 1 #--- add back in
+#move_speed = 1800  # Max pulse length out of 4096 #--- add back in
+#turn_speed = 1500 #--- add back in
+
 servo_ctr = 320 #ultrasonic sensor facing front
+
 # servo_rgt = 150 #ultrasonic sensor facing left
+# servo_lft = 500 #ultrasonic sensor facing right
+
 
 LRservo_cur = servo_ctr
 UDservo_cur = servo_ctr
@@ -98,26 +101,26 @@ maxDown = 424
 step = 3#20
 
 #initialize GPIO status variables
-#IN1Sts = 0
-#IN2Sts = 0
-#ENASts = 0
-#IN3Sts = 0
-#IN4Sts = 0
-#ENBSts = 0
+#IN1Sts = 0 #--- add back in
+#IN2Sts = 0 #--- add back in
+#ENASts = 0 #--- add back in
+#IN3Sts = 0 #--- add back in
+#IN4Sts = 0 #--- add back in
+#ENBSts = 0 #--- add back in
 
 
         
         
 def changespeed(speed):
-    print("changeSpeed")
-    #pwm.set_pwm(ENB, 0, speed)
-    #pwm.set_pwm(ENA, 0, int(speed*.95))
+    print("changeSpeed") #--- only for testing
+    #pwm.set_pwm(ENB, 0, speed) #--- add back in
+    #pwm.set_pwm(ENA, 0, int(speed*.95)) #--- add back in
 
 # Define motor control  pins as output
-# GPIO.setup(IN1, GPIO.OUT)   
-# GPIO.setup(IN2, GPIO.OUT) 
-# GPIO.setup(IN3, GPIO.OUT)   
-# GPIO.setup(IN4, GPIO.OUT) 
+# GPIO.setup(IN1, GPIO.OUT)    #--- add back in
+# GPIO.setup(IN2, GPIO.OUT)  #--- add back in
+# GPIO.setup(IN3, GPIO.OUT)    #--- add back in
+# GPIO.setup(IN4, GPIO.OUT)  #--- add back in
 
 
 #todo: make a hashmap/hashtable thing, for inputs from html file
@@ -126,7 +129,7 @@ def changespeed(speed):
 
 def stopcar():
     #print("stopping car")
-    return
+    return #--- only for testing
     GPIO.output(IN1, GPIO.LOW)
     GPIO.output(IN2, GPIO.LOW)
     GPIO.output(IN3, GPIO.LOW)
@@ -135,7 +138,7 @@ def stopcar():
 
 def backward():
     #print("going back")
-    return
+    return #--- only for testing
     GPIO.output(IN1, GPIO.HIGH)
     GPIO.output(IN2, GPIO.LOW)
     GPIO.output(IN3, GPIO.HIGH)
@@ -144,7 +147,7 @@ def backward():
     
 def forward():
     #print("going forward")
-    return
+    return #--- only for testing
     GPIO.output(IN1, GPIO.LOW)
     GPIO.output(IN2, GPIO.HIGH)
     GPIO.output(IN3, GPIO.LOW)
@@ -153,7 +156,7 @@ def forward():
 
 def turnright():
     #print("turning right")
-    return
+    return #--- only for testing
     GPIO.output(IN1, GPIO.LOW)
     GPIO.output(IN2, GPIO.HIGH)
     GPIO.output(IN3, GPIO.HIGH)
@@ -162,7 +165,7 @@ def turnright():
     
 def turnleft():
     #print("turning left")
-    return
+    return #--- only for testing
     GPIO.output(IN1, GPIO.HIGH)
     GPIO.output(IN2, GPIO.LOW)
     GPIO.output(IN3, GPIO.LOW)
@@ -171,7 +174,7 @@ def turnleft():
     
 def turnCam():#camDir):
     #print("turning cam: " + str(camDir))
-    return
+    return #--- only for testing
     global LRservo_cur, UDservo_cur
     #print(camDir)
     #if camDirX == CamDirection.NONE.value:
@@ -232,7 +235,7 @@ def turnCam():#camDir):
 
 def centerCam():
     print("centering cam")
-    return
+    return #--- only for testing
     global LRservo_cur, UDservo_cur
     LRservo_cur = servo_ctr
     UDservo_cur = servo_ctr 
@@ -241,8 +244,8 @@ def centerCam():
     
 #initialize robot
 stopcar()
-#pwm.set_pwm(LRcam_servo, 0, servo_ctr)
-#pwm.set_pwm(UDcam_servo, 0, servo_ctr)
+#pwm.set_pwm(LRcam_servo, 0, servo_ctr)#--- add back in
+#pwm.set_pwm(UDcam_servo, 0, servo_ctr)#--- add back in
 time.sleep(2)
 
 running = True
@@ -322,13 +325,13 @@ def hello():
 def recieve1():#buttonvals,moveAxesVal,camAxesVals):
     global carDir, camDirX, camDirY, buttonVals
     tempCar = int(request.args.get('car'))
-    if(tempCar>=0 and tempCar <=8):#check if valid
+    if(tempCar>=0 and tempCar <=8):#TODO check if valid
         carDir = tempCar
     #print(carDir)
     tempCams = request.args.get('cam')
     tempCamsX = int(tempCams[0])
     tempCamsY = int(tempCams[1])
-    if(True): #check if valid
+    if(True): #TODO check if valid
         camDirX = tempCamsX
         camDirY = tempCamsY
     #print("X: " + str(tempCamsX) + ", Y: " + str(tempCamsY))
@@ -368,8 +371,8 @@ def recieve(buttonvals,moveAxesVal,camAxesVals):
 #or if just being held down 
 #(when repeatedly sent the same button press without the button release in between; 
 #just check if its already the val being sent)
-@app.route("/<action>/<cmd>")
-def action(action,cmd):
+#@app.route("/<action>/<cmd>")
+#def action(action,cmd):
     return render_template('testing.html')
     global carDir
     if action=='camera':
