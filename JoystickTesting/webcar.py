@@ -113,6 +113,13 @@ GPIO.setup(IN2, GPIO.OUT)  #--- add back in
 GPIO.setup(IN3, GPIO.OUT)    #--- add back in
 GPIO.setup(IN4, GPIO.OUT)  #--- add back in
         
+# Define peripheral pins
+lightPin = 25
+UVPin = 3
+whitePin = 2
+magnetPin = 4
+GPIO.setup(lightPin, GPIO.IN)        
+        
         
 def changespeed(speed):
     #print("changeSpeed") #--- only for testing
@@ -224,6 +231,8 @@ camDirX = CamDirection.NONE.value
 camDirY = CamDirection.NONE.value
 cam_center = False
 buttonVals = [0,0,0,0,0,0,0,0,0]
+prevButtons = [0,0,0,0,0,0,0,0,0]
+prevButtonState = [0,0,0,0,0,0,0,0,0]
 
 
 def update(dt):
@@ -267,10 +276,12 @@ app = Flask(__name__, static_url_path='')
 @app.route("/")
 def hello():
    return render_template('testing.html')
-   
+
+
 @app.route("/data")
 def recieve1():#buttonvals,moveAxesVal,camAxesVals):
-    global carDir, camDirX, camDirY, buttonVals
+    global carDir, camDirX, camDirY, buttonVals, prevButtonState, prevButtons
+    print("received")
     tempCar = int(request.args.get('car'))
     if(tempCar>=0 and tempCar <=8):#TODO check if valid
         carDir = tempCar
@@ -282,20 +293,52 @@ def recieve1():#buttonvals,moveAxesVal,camAxesVals):
         camDirX = tempCamsX
         camDirY = tempCamsY
     #print("X: " + str(tempCamsX) + ", Y: " + str(tempCamsY))
-    
     tempButtons = request.args.get('buttons')
     if(len(tempButtons) == 9):
         for i in range(9):
             butVal = int(tempButtons[i])
             if(butVal == 0 or butVal == 1):
                 buttonVals[i] = butVal
-                #print(str(buttonVals[i]))
-    #print("recieved")
+
+    print(buttonVals)
+    print(prevButtons)
+    print(prevButtonState)
+    
+    # Checks UV Flashlight
+    if(buttonVals[3]==0 and prevButtons[3]==1):
+        if(prevButtonState[3]==0):
+            prevButtonState[3] = uvFlashlight(1)
+            print("turn on")
+        elif(prevButtonState[3]==1):
+            prevButtonState[3] = uvFlashlight(0)
+            print("turn off")
+    elif((buttonVals[3]==0 and prevButtons[3]==0) and buttonVals[4]==1):
+        prevButtonState[3] = 0
+    
+    # Checks White Flashlight
+    if(buttonVals[4]==0 and prevButtons[4]==1):
+        if(prevButtonState[4]==0):
+            prevButtonState[4] = whiteFlashlight(1)
+            print("turn on")
+        elif(prevButtonState[4]==1):
+            prevButtonState[4] = whiteFlashlight(0)
+            print("turn off")
+    elif((buttonVals[4]==0 and prevButtons[4]==0) and buttonVals[3]==1):
+        prevButtonState[4] = 0
+        
+    # Centers Camera
+    if(buttonVals[5]==0 and prevButtons[5]==1):
+        centerCam()
+        
+    #Copies previous buttons
+    for i in range(9):
+        prevButtons[i] = buttonVals[i]
+    
     return render_template('testing.html')
     
 @app.route("/<buttonvals>/<moveAxesVal>/<camAxesVals>")
 def recieve(buttonvals,moveAxesVal,camAxesVals):
-    #print("recieved")
+   
     return render_template('testing.html')
 
 
@@ -312,7 +355,25 @@ def recieve(buttonvals,moveAxesVal,camAxesVals):
     #second is y axis, either 0, 3, or 4.
     #matches CamDirection enum
     
+# --- PERIPHERAL FUNCTIONS ---
+def whiteFlashlight(status):
+    if(status):
+        pwm.set_pwm(whitePin, 0, 4000)
+#         time.sleep(5)
+    else:
+        pwm.set_pwm(whitePin, 0, 0)
+    pwm.set_pwm(UVPin, 0, 0)
+    pwm.set_pwm(magnetPin, 0, 0)
+    return status
     
+def uvFlashlight(status):
+    if(status):
+        pwm.set_pwm(UVPin, 0, 4000)    #switch leds on and off
+    else:
+        pwm.set_pwm(UVPin, 0, 0)
+    pwm.set_pwm(whitePin, 0, 0)
+    pwm.set_pwm(magnetPin, 0, 0)
+    return status
 
 
 #TODO: fix problem when right click image and "open image in new tab"
