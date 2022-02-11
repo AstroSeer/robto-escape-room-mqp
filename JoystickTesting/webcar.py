@@ -19,13 +19,17 @@ import RPi.GPIO as GPIO #--- add back in
 from enum import Enum
 
 
-pi_ip_address='130.215.169.19'#'localhost'
+pi_ip_address='130.215.15.174'#'localhost'
 
 # Initialise the PCA9685 using the default address (0x40).
 pwm = Adafruit_PCA9685.PCA9685() #--- add back in
 pwm.set_pwm_freq(60)#--- add back in
 
 
+import os     #importing os library so as to communicate with the system
+os.system ("sudo pigpiod") #Launching GPIO library
+time.sleep(1) # As i said it is too impatient and so if this delay is removed you will get an error
+import pigpio #importing GPIO library
 
 #TODO
 #make it so that if it has not recieved anything from the html for a while, 
@@ -112,6 +116,21 @@ GPIO.setup(IN1, GPIO.OUT)    #--- add back in
 GPIO.setup(IN2, GPIO.OUT)  #--- add back in
 GPIO.setup(IN3, GPIO.OUT)    #--- add back in
 GPIO.setup(IN4, GPIO.OUT)  #--- add back in
+        
+# Define peripheral pins
+lightPin = 25
+UVPin = 3
+whitePin = 2
+magnetPin = 4
+GPIO.setup(lightPin, GPIO.IN)
+# For Lift
+ESC=13  #Connect the ESC in this GPIO pin 
+speed = 200
+stop = 1500
+
+pi = pigpio.pi();
+time.sleep(1)
+pi.set_servo_pulsewidth(ESC, stop)
         
         
 def changespeed(speed):
@@ -224,6 +243,9 @@ camDirX = CamDirection.NONE.value
 camDirY = CamDirection.NONE.value
 cam_center = False
 buttonVals = [0,0,0,0,0,0,0,0,0]
+prevButtons = [0,0,0,0,0,0,0,0,0]
+prevButtonState = [0,0,0,0,0,0,0,0,0]
+hasBlock = False
 
 
 def update(dt):
@@ -267,10 +289,12 @@ app = Flask(__name__, static_url_path='')
 @app.route("/")
 def hello():
    return render_template('testing.html')
-   
+
+
 @app.route("/data")
 def recieve1():#buttonvals,moveAxesVal,camAxesVals):
-    global carDir, camDirX, camDirY, buttonVals
+    global carDir, camDirX, camDirY, buttonVals, prevButtonState, prevButtons
+    print("received")
     tempCar = int(request.args.get('car'))
     if(tempCar>=0 and tempCar <=8):#TODO check if valid
         carDir = tempCar
@@ -282,20 +306,77 @@ def recieve1():#buttonvals,moveAxesVal,camAxesVals):
         camDirX = tempCamsX
         camDirY = tempCamsY
     #print("X: " + str(tempCamsX) + ", Y: " + str(tempCamsY))
-    
     tempButtons = request.args.get('buttons')
     if(len(tempButtons) == 9):
         for i in range(9):
             butVal = int(tempButtons[i])
             if(butVal == 0 or butVal == 1):
                 buttonVals[i] = butVal
-                #print(str(buttonVals[i]))
-    #print("recieved")
+
+    print(buttonVals)
+    print(prevButtons)
+    print(prevButtonState)
+    
+    # Checks UV Flashlight
+    if(buttonVals[3]==0 and prevButtons[3]==1):
+        if(prevButtonState[3]==0):
+            prevButtonState[3] = uvFlashlight(1)
+            print("turn on")
+        elif(prevButtonState[3]==1):
+            prevButtonState[3] = uvFlashlight(0)
+            print("turn off")
+    elif((buttonVals[3]==0 and prevButtons[3]==0) and buttonVals[4]==1):
+        prevButtonState[3] = 0
+    
+    # Checks White Flashlight
+    if(buttonVals[4]==0 and prevButtons[4]==1):
+        if(prevButtonState[4]==0):
+            prevButtonState[4] = whiteFlashlight(1)
+            print("turn on")
+        elif(prevButtonState[4]==1):
+            prevButtonState[4] = whiteFlashlight(0)
+            print("turn off")
+    elif((buttonVals[4]==0 and prevButtons[4]==0) and buttonVals[3]==1):
+        prevButtonState[4] = 0
+        
+    # Centers Camera
+    if(buttonVals[5]==0 and prevButtons[5]==1):
+        centerCam()
+    
+    # Checks Electromagnet
+    if(buttonVals[6]==0 and prevButtons[6]==1):
+        if(prevButtonState[6]==0):
+            prevButtonState[6] = magnet(1)
+            print("turn on")
+        elif(prevButtonState[6]==1):
+            prevButtonState[6] = magnet(0)
+            print("turn off")
+    
+    # Moves lift up
+    if(buttonVals[7]==0 and prevButtons[7]==1):
+        if(prevButtonState[7]==0):
+            prevButtonState[8] = 0
+            prevButtonState[7] = liftUp(1)
+            print("going up")
+        else: print("already up")   
+    
+    # Moves lift down
+    if(buttonVals[8]==0 and prevButtons[8]==1):
+        if(prevButtonState[8]==0):
+            prevButtonState[7] = 0
+            prevButtonState[8] = liftDown(1)
+            print("going down")
+        else: print("already down")
+        
+    #Copies previous buttons
+    for i in range(9):
+        prevButtons[i] = buttonVals[i]
+    
     return render_template('testing.html')
     
 @app.route("/<buttonvals>/<moveAxesVal>/<camAxesVals>")
 def recieve(buttonvals,moveAxesVal,camAxesVals):
-    #print("recieved")
+   
     return render_template('testing.html')
 
 
@@ -312,7 +393,59 @@ def recieve(buttonvals,moveAxesVal,camAxesVals):
     #second is y axis, either 0, 3, or 4.
     #matches CamDirection enum
     
+# --- PERIPHERAL FUNCTIONS ---
+def whiteFlashlight(status):
+    if(status):
+        pwm.set_pwm(whitePin, 0, 4000)
+#         time.sleep(5)
+    else:
+        pwm.set_pwm(whitePin, 0, 0)
+    pwm.set_pwm(UVPin, 0, 0)
+    pwm.set_pwm(magnetPin, 0, 0)
+    return status
     
+def uvFlashlight(status):
+    if(status):
+        pwm.set_pwm(UVPin, 0, 4000)    #switch leds on and off
+    else:
+        pwm.set_pwm(UVPin, 0, 0)
+    pwm.set_pwm(whitePin, 0, 0)
+    pwm.set_pwm(magnetPin, 0, 0)
+    return status
+
+def magnet(status):
+    if(status):
+        pwm.set_pwm(magnetPin, 0, 4000)    #switch EM on and off
+    else:
+        pwm.set_pwm(magnetPin, 0, 0)
+    pwm.set_pwm(whitePin, 0, 0)
+    pwm.set_pwm(UVPin, 0, 0)
+    return status
+
+def liftUp(status):
+    global hasBlock
+    if(hasBlock):
+        pi.set_servo_pulsewidth(ESC, stop-speed)
+        time.sleep(2.5)
+           
+        pi.set_servo_pulsewidth(ESC, stop)
+        time.sleep(1)
+    else:
+        pi.set_servo_pulsewidth(ESC, stop-speed)
+        time.sleep(1.75)
+           
+        pi.set_servo_pulsewidth(ESC, stop)
+        time.sleep(1) 
+    return status
+
+def liftDown(status):
+    if(status):
+        pi.set_servo_pulsewidth(ESC, stop+speed)
+        time.sleep(1.75)
+    
+        pi.set_servo_pulsewidth(ESC, stop)
+        time.sleep(1)
+    return status
 
 
 #TODO: fix problem when right click image and "open image in new tab"
