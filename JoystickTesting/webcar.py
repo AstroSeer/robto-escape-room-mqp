@@ -63,6 +63,17 @@ class Button(Enum):
     OFF = 0
     ON = 1
 
+class Toggle(Enum):
+    TURN_OFF = -1
+    OFF = 0
+    ON = 1
+    TURN_ON = 2
+    
+class LiftDirection(Enum):
+    DOWN: -1
+    NONE: 0
+    UP: 1
+
 cam = RobtoCam.Camera()
 #with this variable cam, can access the object's properties
     #in order to get the information from the vision processing code
@@ -218,8 +229,6 @@ def turnCam():#camDir):
             UDservo_cur = maxDown            
         pwm.set_pwm(UDcam_servo, 0, UDservo_cur)
     
-        
-
 def centerCam():
     print("centering cam")
     #return #--- only for testing
@@ -229,6 +238,27 @@ def centerCam():
     pwm.set_pwm(LRcam_servo, 0, LRservo_cur)
     pwm.set_pwm(UDcam_servo, 0, UDservo_cur)
     
+def moveLift():
+    if(liftDir == LiftDirection.UP.value):
+        liftUp(1)
+    elif(liftDir == LiftDirection.DOWN.value):
+        liftDown(1)
+    # Moves lift up
+    #if(buttonVals[7]==0 and prevButtons[7]==1):
+      #  if(prevButtonState[7]==0):
+       #     prevButtonState[8] = 0
+            # prevButtonState[7] = liftUp(1)
+            # print("going up")
+        # else: print("already up")   
+    
+    # # Moves lift down
+    # if(buttonVals[8]==0 and prevButtons[8]==1):
+        # if(prevButtonState[8]==0):
+            # prevButtonState[7] = 0
+            # prevButtonState[8] = liftDown(1)
+            # print("going down")
+        # else: print("already down")
+
 #initialize robot
 stopcar()
 pwm.set_pwm(LRcam_servo, 0, servo_ctr)#--- add back in
@@ -243,11 +273,25 @@ camDirX = CamDirection.NONE.value
 camDirY = CamDirection.NONE.value
 cam_center = False
 buttonVals = [0,0,0,0,0,0,0,0,0]
+#Buttons:
+#0:
+#1: 
+#2:
+#3: UV flashlight toggle
+#4: White flashlight toggle
+#5: Center cam
+#6: Electromagnet toggle
+#7: Lift up
+#8: Lift down
+
+
 prevButtons = [0,0,0,0,0,0,0,0,0]
 prevButtonState = [0,0,0,0,0,0,0,0,0]
 hasBlock = False
-
-
+UVToggle = Toggle.OFF.value
+flashlightToggle = Toggle.OFF.value
+magnetToggle = Toggle.OFF.value
+liftDir = LiftDirection.NONE.value
 def update(dt):
         #if python 3.10 or above, can use "match", works like switch statements 
         if carDir == CarDirection.NONE.value:
@@ -283,6 +327,58 @@ def update(dt):
         else:
             turnCam()
             
+        
+         # # Checks UV Flashlight
+         # if(UVToggle == Toggle.TURN_ON.value):
+            # uvFlashlight(1)
+            # UVToggle = Toggle.ON.value
+         # elif(UVToggle == Toggle.TURN_OFF.value):
+            # uvFlashlight(0)
+            # UVToggle = Toggle.OFF.value
+            
+            
+         
+         
+        # if(buttonVals[3]==0 and prevButtons[3]==1):
+            # if(prevButtonState[3]==0):
+                # prevButtonState[3] = uvFlashlight(1)
+                # print("turn on")
+            # elif(prevButtonState[3]==1):
+                # prevButtonState[3] = uvFlashlight(0)
+                # print("turn off")
+        # elif((buttonVals[3]==0 and prevButtons[3]==0) and buttonVals[4]==1):
+            # prevButtonState[3] = 0
+        
+        # # Checks White Flashlight
+        # if(buttonVals[4]==0 and prevButtons[4]==1):
+            # if(prevButtonState[4]==0):
+                # prevButtonState[4] = whiteFlashlight(1)
+                # print("turn on")
+            # elif(prevButtonState[4]==1):
+                # prevButtonState[4] = whiteFlashlight(0)
+                # print("turn off")
+        # elif((buttonVals[4]==0 and prevButtons[4]==0) and buttonVals[3]==1):
+            # prevButtonState[4] = 0
+            
+        
+        
+        # # Checks Electromagnet
+        # if(buttonVals[6]==0 and prevButtons[6]==1):
+            # if(prevButtonState[6]==0):
+                # prevButtonState[6] = magnet(1)
+                # print("turn on")
+            # elif(prevButtonState[6]==1):
+                # prevButtonState[6] = magnet(0)
+                # print("turn off")
+        
+        
+        
+        #moveLift()
+            
+        # #Copies previous buttons
+        # for i in range(9):
+            # prevButtons[i] = buttonVals[i]
+            
 app = Flask(__name__, static_url_path='')
 
 
@@ -293,7 +389,7 @@ def hello():
 
 @app.route("/data")
 def recieve1():#buttonvals,moveAxesVal,camAxesVals):
-    global carDir, camDirX, camDirY, buttonVals, prevButtonState, prevButtons
+    global carDir, camDirX, camDirY, buttonVals, prevButtonState, prevButtons, UVToggle, magnetToggle, flashlightToggle, center_cam
     print("received")
     tempCar = int(request.args.get('car'))
     if(tempCar>=0 and tempCar <=8):#TODO check if valid
@@ -317,7 +413,16 @@ def recieve1():#buttonvals,moveAxesVal,camAxesVals):
     print(prevButtons)
     print(prevButtonState)
     
+    
+    
     # Checks UV Flashlight
+    # if(buttonVals[3]==1 and prevButtons[3]==0):
+        # UVToggle = Toggle.TURN_ON.value
+    # elif(buttonVals[3]==0 and prevButtons[3]==1):
+        # UVToggle = Toggle.TURN_OFF.value
+    
+    
+    #maybe keep these for the light toggles???
     if(buttonVals[3]==0 and prevButtons[3]==1):
         if(prevButtonState[3]==0):
             prevButtonState[3] = uvFlashlight(1)
@@ -328,7 +433,16 @@ def recieve1():#buttonvals,moveAxesVal,camAxesVals):
     elif((buttonVals[3]==0 and prevButtons[3]==0) and buttonVals[4]==1):
         prevButtonState[3] = 0
     
+    
+    
     # Checks White Flashlight
+    # if(buttonVals[4]==1 and prevButtons[4]==0):
+        # flashlightToggle = Toggle.TURN_ON.value
+    # elif(buttonVals[4]==0 and prevButtons[4]==1):
+        # flashlightToggle = Toggle.TURN_OFF.value
+        
+        
+        
     if(buttonVals[4]==0 and prevButtons[4]==1):
         if(prevButtonState[4]==0):
             prevButtonState[4] = whiteFlashlight(1)
@@ -340,8 +454,14 @@ def recieve1():#buttonvals,moveAxesVal,camAxesVals):
         prevButtonState[4] = 0
         
     # Centers Camera
-    if(buttonVals[5]==0 and prevButtons[5]==1):
-        centerCam()
+    #if(buttonVals[5]==0 and prevButtons[5]==1):
+       # centerCam()
+    if(buttonVals[5]==1):
+       center_cam = True
+       #holding the center cam button will keep the camera locked and unable to move
+       #which isnt a bad thing. 
+    else:
+       center_cam = False
     
     # Checks Electromagnet
     if(buttonVals[6]==0 and prevButtons[6]==1):
@@ -352,6 +472,10 @@ def recieve1():#buttonvals,moveAxesVal,camAxesVals):
             prevButtonState[6] = magnet(0)
             print("turn off")
     
+    
+    #make it so that up and down are mutually exclusive,
+        #but if youre holding one and then hold the other, the more recent one takes priority,
+        #and if you let go of the second, the first one takes over again?
     # Moves lift up
     if(buttonVals[7]==0 and prevButtons[7]==1):
         if(prevButtonState[7]==0):
@@ -425,6 +549,8 @@ def magnet(status):
 def liftUp(status):
     global hasBlock
     if(hasBlock):
+        #instead of doing this and needing to time.sleep, can't we treat it like the camera?
+        #moving a small amount at a time, setting the pwm?
         pi.set_servo_pulsewidth(ESC, stop-speed)
         time.sleep(2.5)
            
