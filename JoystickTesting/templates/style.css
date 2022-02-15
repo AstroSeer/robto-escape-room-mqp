@@ -1,0 +1,56 @@
+#content {
+    padding:3px;
+}
+
+head {
+    background: #090909;
+}
+
+body {
+    background: #090909;
+}
+
+h1 {
+    color: #006614;
+    border-style: solid;
+    border-radius: 7px;
+    font-family: "Verdana", sans-serif;
+    text-align: center;
+    margin-left: 30%;
+    margin-right: 30%;
+}
+
+h2 {
+    color: #006614;
+    border-style: solid;
+    border-radius: 7px;
+    font-family: "Verdana", sans-serif;
+    text-align: center;
+    margin-left: 95%;
+}
+
+p {
+    color: #006614
+    font-family: "Verdana", sans-serif;
+    text-align: center;
+}
+
+video {
+    border: 7px #006614;
+    border-style: solid;
+    border-radius: 7px;
+    margin-left: 33%;
+    position: relative;
+}
+
+p1 {
+    color: #006614;
+    font-family: "Verdana", sans-serif;
+    font-size: 20px;
+    border: 3px #006614;
+    border-style: solid;
+    border-radius: 7px;
+    padding-right: 48%;
+    padding-bottom: 5%;
+    margin-left: 25%;
+}
