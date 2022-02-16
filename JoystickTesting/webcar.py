@@ -19,7 +19,7 @@ import RPi.GPIO as GPIO #--- add back in
 from enum import Enum
 
 
-pi_ip_address='130.215.15.174'#'localhost'
+pi_ip_address='130.215.14.137'#'localhost'
 
 # Initialise the PCA9685 using the default address (0x40).
 pwm = Adafruit_PCA9685.PCA9685() #--- add back in
@@ -70,9 +70,9 @@ class Toggle(Enum):
     TURN_ON = 2
     
 class LiftDirection(Enum):
-    DOWN: -1
-    NONE: 0
-    UP: 1
+    DOWN = -1
+    NONE = 0
+    UP = 1
 
 cam = RobtoCam.Camera()
 #with this variable cam, can access the object's properties
@@ -110,7 +110,7 @@ UDcam_servo = 14 #up/down camera servo
 maxRight = 120
 maxLeft = 550
 maxUp = 190
-maxDown = 424
+maxDown = 500
 step = 3#20 #how far camera servos move in one step
 
 #initialize GPIO status variables
@@ -228,7 +228,8 @@ def turnCam():#camDir):
         if UDservo_cur >= maxDown:
             UDservo_cur = maxDown            
         pwm.set_pwm(UDcam_servo, 0, UDservo_cur)
-    
+
+# --- PERIPHERAL FUNCTIONS ---
 def centerCam():
     print("centering cam")
     #return #--- only for testing
@@ -239,25 +240,45 @@ def centerCam():
     pwm.set_pwm(UDcam_servo, 0, UDservo_cur)
     
 def moveLift():
-    if(liftDir == LiftDirection.UP.value):
-        liftUp(1)
-    elif(liftDir == LiftDirection.DOWN.value):
-        liftDown(1)
-    # Moves lift up
-    #if(buttonVals[7]==0 and prevButtons[7]==1):
-      #  if(prevButtonState[7]==0):
-       #     prevButtonState[8] = 0
-            # prevButtonState[7] = liftUp(1)
-            # print("going up")
-        # else: print("already up")   
+    global liftDir, buttonVals
+    if(liftDir != LiftDirection.UP.value and buttonVals[7]==1):  #can toggle LiftDirection.UP.value when it hits limit switch?
+        pi.set_servo_pulsewidth(ESC, stop-speed)
+        if(liftDir == LiftDirection.DOWN.value):
+            liftDir = LiftDirection.NONE.value 
+    elif(liftDir != LiftDirection.DOWN.value and buttonVals[8]==1):
+        pi.set_servo_pulsewidth(ESC, stop+speed)
+        if(liftDir == LiftDirection.UP.value):
+            liftDir = LiftDirection.NONE.value    
+    else:
+        pi.set_servo_pulsewidth(ESC, stop)
+        
+def checkLiftLimits():
+    global liftDir
+#     #pseudocode for how we can restrict user from abusing lift
+#     if(topLiftLimitSwitch == 1):
+#         liftDir = LiftDirection.UP.value
+#     elif(bottomLiftLimitSwitch == 1):
+#         liftDir = LiftDirection.DOWN.value
+
+def whiteFlashlight(status):
+    if(status):
+        pwm.set_pwm(whitePin, 0, 4000)
+    else:
+        pwm.set_pwm(whitePin, 0, 0)
+#     pwm.set_pwm(UVPin, 0, 0)
     
-    # # Moves lift down
-    # if(buttonVals[8]==0 and prevButtons[8]==1):
-        # if(prevButtonState[8]==0):
-            # prevButtonState[7] = 0
-            # prevButtonState[8] = liftDown(1)
-            # print("going down")
-        # else: print("already down")
+def uvFlashlight(status):
+    if(status):
+        pwm.set_pwm(UVPin, 0, 4000)    #switch leds on and off
+    else:
+        pwm.set_pwm(UVPin, 0, 0)
+#     pwm.set_pwm(whitePin, 0, 0)
+
+def magnet(status):
+    if(status):
+        pwm.set_pwm(magnetPin, 0, 4000)    #switch EM on and off
+    else:
+        pwm.set_pwm(magnetPin, 0, 0)
 
 #initialize robot
 stopcar()
@@ -287,93 +308,90 @@ buttonVals = [0,0,0,0,0,0,0,0,0]
 
 prevButtons = [0,0,0,0,0,0,0,0,0]
 prevButtonState = [0,0,0,0,0,0,0,0,0]
-hasBlock = False
 UVToggle = Toggle.OFF.value
 flashlightToggle = Toggle.OFF.value
 magnetToggle = Toggle.OFF.value
 liftDir = LiftDirection.NONE.value
 def update(dt):
-        #if python 3.10 or above, can use "match", works like switch statements 
-        if carDir == CarDirection.NONE.value:
-            stopcar()
-        elif carDir == CarDirection.FORWARD.value:
-            forward()
-            #print("forward")
-        elif carDir == CarDirection.BACK.value:
-            backward()
-            #print("backward")
-        elif carDir == CarDirection.TURN_RIGHT.value:
-            turnright()
-           # print("turn right")
-        elif carDir == CarDirection.TURN_LEFT.value:
-            turnleft()
-            #print("turn left")
+    global UVToggle, flashlightToggle, magnetToggle, cam_center, buttonVals
+    #if python 3.10 or above, can use "match", works like switch statements 
+    if carDir == CarDirection.NONE.value:
+        stopcar()
+    elif carDir == CarDirection.FORWARD.value:
+        forward()
+        #print("forward")
+    elif carDir == CarDirection.BACK.value:
+        backward()
+        #print("backward")
+    elif carDir == CarDirection.TURN_RIGHT.value:
+        turnright()
+       # print("turn right")
+    elif carDir == CarDirection.TURN_LEFT.value:
+        turnleft()
+        #print("turn left")
+        
+    #code for implementing diagonal values for movement joystick
+    # elif carDir == CarDirection.FOR_LEFT.value:
+        # #print("front left")
+    # elif carDir == CarDirection.FOR_RIGHT.value:
+        # #print("front right")
+    # elif carDir == CarDirection.BACK_LEFT.value:
+        # #print("back right")
+    # elif carDir == CarDirection.BACK_RIGHT.value:
+        #print("back right")
+    #else:
+        #print("carDir: " + str(carDir))
+        #stopcar()
+        
+    if cam_center:
+        centerCam()
+    else:
+        turnCam()
+    
+     # Checks UV Flashlight
+    if(UVToggle == Toggle.TURN_ON.value and buttonVals[3]==1):
+        uvFlashlight(1)
+        UVToggle = Toggle.ON.value
+#         flashlightToggle = Toggle.OFF.value
+    elif(UVToggle == Toggle.ON.value and buttonVals[3]==0):
+        UVToggle = Toggle.TURN_OFF.value
+    elif(UVToggle == Toggle.TURN_OFF.value and buttonVals[3]==1):
+        uvFlashlight(0)
+        UVToggle = Toggle.OFF.value
+    elif(UVToggle == Toggle.OFF.value and buttonVals[3]==0):
+        UVToggle = Toggle.TURN_ON.value
+        
+    # Checks flashlight
+    if(flashlightToggle == Toggle.TURN_ON.value and buttonVals[4]==1):
+        whiteFlashlight(1)
+        flashlightToggle = Toggle.ON.value
+#         UVToggle = Toggle.OFF.value
+    elif(flashlightToggle == Toggle.ON.value and buttonVals[4]==0):
+        flashlightToggle = Toggle.TURN_OFF.value
+    elif(flashlightToggle == Toggle.TURN_OFF.value and buttonVals[4]==1):
+        whiteFlashlight(0)
+        flashlightToggle = Toggle.OFF.value
+    elif(flashlightToggle == Toggle.OFF.value and buttonVals[4]==0):
+        flashlightToggle = Toggle.TURN_ON.value
+        
+    if(buttonVals[5]==1):
+        cam_center = True
+    else:
+        cam_center = False         
             
-        #code for implementing diagonal values for movement joystick
-        # elif carDir == CarDirection.FOR_LEFT.value:
-            # #print("front left")
-        # elif carDir == CarDirection.FOR_RIGHT.value:
-            # #print("front right")
-        # elif carDir == CarDirection.BACK_LEFT.value:
-            # #print("back right")
-        # elif carDir == CarDirection.BACK_RIGHT.value:
-            #print("back right")
-        #else:
-            #print("carDir: " + str(carDir))
-            #stopcar()
-            
-        if cam_center:
-            centerCam()
-        else:
-            turnCam()
-            
+    # Checks EM
+    if(magnetToggle == Toggle.TURN_ON.value and buttonVals[6]==1):
+        magnet(1)
+        magnetToggle = Toggle.ON.value
+    elif(magnetToggle == Toggle.ON.value and buttonVals[6]==0):
+        magnetToggle = Toggle.TURN_OFF.value
+    elif(magnetToggle == Toggle.TURN_OFF.value and buttonVals[6]==1):
+        magnet(0)
+        magnetToggle = Toggle.OFF.value
+    elif(magnetToggle == Toggle.OFF.value and buttonVals[6]==0):
+        magnetToggle = Toggle.TURN_ON.value 
         
-         # # Checks UV Flashlight
-         # if(UVToggle == Toggle.TURN_ON.value):
-            # uvFlashlight(1)
-            # UVToggle = Toggle.ON.value
-         # elif(UVToggle == Toggle.TURN_OFF.value):
-            # uvFlashlight(0)
-            # UVToggle = Toggle.OFF.value
-            
-            
-         
-         
-        # if(buttonVals[3]==0 and prevButtons[3]==1):
-            # if(prevButtonState[3]==0):
-                # prevButtonState[3] = uvFlashlight(1)
-                # print("turn on")
-            # elif(prevButtonState[3]==1):
-                # prevButtonState[3] = uvFlashlight(0)
-                # print("turn off")
-        # elif((buttonVals[3]==0 and prevButtons[3]==0) and buttonVals[4]==1):
-            # prevButtonState[3] = 0
-        
-        # # Checks White Flashlight
-        # if(buttonVals[4]==0 and prevButtons[4]==1):
-            # if(prevButtonState[4]==0):
-                # prevButtonState[4] = whiteFlashlight(1)
-                # print("turn on")
-            # elif(prevButtonState[4]==1):
-                # prevButtonState[4] = whiteFlashlight(0)
-                # print("turn off")
-        # elif((buttonVals[4]==0 and prevButtons[4]==0) and buttonVals[3]==1):
-            # prevButtonState[4] = 0
-            
-        
-        
-        # # Checks Electromagnet
-        # if(buttonVals[6]==0 and prevButtons[6]==1):
-            # if(prevButtonState[6]==0):
-                # prevButtonState[6] = magnet(1)
-                # print("turn on")
-            # elif(prevButtonState[6]==1):
-                # prevButtonState[6] = magnet(0)
-                # print("turn off")
-        
-        
-        
-        #moveLift()
+    moveLift()
             
         # #Copies previous buttons
         # for i in range(9):
@@ -408,89 +426,11 @@ def recieve1():#buttonvals,moveAxesVal,camAxesVals):
             butVal = int(tempButtons[i])
             if(butVal == 0 or butVal == 1):
                 buttonVals[i] = butVal
-
-    print(buttonVals)
-    print(prevButtons)
-    print(prevButtonState)
-    
-    
-    
-    # Checks UV Flashlight
-    # if(buttonVals[3]==1 and prevButtons[3]==0):
-        # UVToggle = Toggle.TURN_ON.value
-    # elif(buttonVals[3]==0 and prevButtons[3]==1):
-        # UVToggle = Toggle.TURN_OFF.value
-    
-    
-    #maybe keep these for the light toggles???
-    if(buttonVals[3]==0 and prevButtons[3]==1):
-        if(prevButtonState[3]==0):
-            prevButtonState[3] = uvFlashlight(1)
-            print("turn on")
-        elif(prevButtonState[3]==1):
-            prevButtonState[3] = uvFlashlight(0)
-            print("turn off")
-    elif((buttonVals[3]==0 and prevButtons[3]==0) and buttonVals[4]==1):
-        prevButtonState[3] = 0
-    
-    
-    
-    # Checks White Flashlight
-    # if(buttonVals[4]==1 and prevButtons[4]==0):
-        # flashlightToggle = Toggle.TURN_ON.value
-    # elif(buttonVals[4]==0 and prevButtons[4]==1):
-        # flashlightToggle = Toggle.TURN_OFF.value
-        
-        
-        
-    if(buttonVals[4]==0 and prevButtons[4]==1):
-        if(prevButtonState[4]==0):
-            prevButtonState[4] = whiteFlashlight(1)
-            print("turn on")
-        elif(prevButtonState[4]==1):
-            prevButtonState[4] = whiteFlashlight(0)
-            print("turn off")
-    elif((buttonVals[4]==0 and prevButtons[4]==0) and buttonVals[3]==1):
-        prevButtonState[4] = 0
-        
-    # Centers Camera
-    #if(buttonVals[5]==0 and prevButtons[5]==1):
-       # centerCam()
-    if(buttonVals[5]==1):
-       center_cam = True
-       #holding the center cam button will keep the camera locked and unable to move
-       #which isnt a bad thing. 
-    else:
-       center_cam = False
-    
-    # Checks Electromagnet
-    if(buttonVals[6]==0 and prevButtons[6]==1):
-        if(prevButtonState[6]==0):
-            prevButtonState[6] = magnet(1)
-            print("turn on")
-        elif(prevButtonState[6]==1):
-            prevButtonState[6] = magnet(0)
-            print("turn off")
     
     
     #make it so that up and down are mutually exclusive,
         #but if youre holding one and then hold the other, the more recent one takes priority,
         #and if you let go of the second, the first one takes over again?
-    # Moves lift up
-    if(buttonVals[7]==0 and prevButtons[7]==1):
-        if(prevButtonState[7]==0):
-            prevButtonState[8] = 0
-            prevButtonState[7] = liftUp(1)
-            print("going up")
-        else: print("already up")   
-    
-    # Moves lift down
-    if(buttonVals[8]==0 and prevButtons[8]==1):
-        if(prevButtonState[8]==0):
-            prevButtonState[7] = 0
-            prevButtonState[8] = liftDown(1)
-            print("going down")
-        else: print("already down")
         
     #Copies previous buttons
     for i in range(9):
@@ -516,62 +456,6 @@ def recieve(buttonvals,moveAxesVal,camAxesVals):
     #first is x axis, either 0, 1, or 2.
     #second is y axis, either 0, 3, or 4.
     #matches CamDirection enum
-    
-# --- PERIPHERAL FUNCTIONS ---
-def whiteFlashlight(status):
-    if(status):
-        pwm.set_pwm(whitePin, 0, 4000)
-#         time.sleep(5)
-    else:
-        pwm.set_pwm(whitePin, 0, 0)
-    pwm.set_pwm(UVPin, 0, 0)
-    pwm.set_pwm(magnetPin, 0, 0)
-    return status
-    
-def uvFlashlight(status):
-    if(status):
-        pwm.set_pwm(UVPin, 0, 4000)    #switch leds on and off
-    else:
-        pwm.set_pwm(UVPin, 0, 0)
-    pwm.set_pwm(whitePin, 0, 0)
-    pwm.set_pwm(magnetPin, 0, 0)
-    return status
-
-def magnet(status):
-    if(status):
-        pwm.set_pwm(magnetPin, 0, 4000)    #switch EM on and off
-    else:
-        pwm.set_pwm(magnetPin, 0, 0)
-    pwm.set_pwm(whitePin, 0, 0)
-    pwm.set_pwm(UVPin, 0, 0)
-    return status
-
-def liftUp(status):
-    global hasBlock
-    if(hasBlock):
-        #instead of doing this and needing to time.sleep, can't we treat it like the camera?
-        #moving a small amount at a time, setting the pwm?
-        pi.set_servo_pulsewidth(ESC, stop-speed)
-        time.sleep(2.5)
-           
-        pi.set_servo_pulsewidth(ESC, stop)
-        time.sleep(1)
-    else:
-        pi.set_servo_pulsewidth(ESC, stop-speed)
-        time.sleep(1.75)
-           
-        pi.set_servo_pulsewidth(ESC, stop)
-        time.sleep(1) 
-    return status
-
-def liftDown(status):
-    if(status):
-        pi.set_servo_pulsewidth(ESC, stop+speed)
-        time.sleep(1.75)
-    
-        pi.set_servo_pulsewidth(ESC, stop)
-        time.sleep(1)
-    return status
 
 
 #TODO: fix problem when right click image and "open image in new tab"
