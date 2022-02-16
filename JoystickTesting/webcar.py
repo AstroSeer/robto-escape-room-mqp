@@ -313,6 +313,8 @@ flashlightToggle = Toggle.OFF.value
 magnetToggle = Toggle.OFF.value
 liftDir = LiftDirection.NONE.value
 def update(dt):
+    #TODO: prevent race conditions with Flask app changing values of buttons and axes?? 
+    #maybe just set local variables equal to what the values were at the beginning of update?
     global UVToggle, flashlightToggle, magnetToggle, cam_center, buttonVals
     #if python 3.10 or above, can use "match", works like switch statements 
     if carDir == CarDirection.NONE.value:
