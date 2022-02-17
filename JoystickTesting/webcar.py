@@ -136,6 +136,8 @@ stop = 1500
 
 topLimitPin = 5
 bottomLimitPin = 6
+GPIO.setup(topLimitPin, GPIO.IN)
+GPIO.setup(bottomLimitPin, GPIO.IN)
 
 pi = pigpio.pi();
 time.sleep(1)
@@ -256,7 +258,7 @@ def checkLiftLimits():
     #pseudocode for how we can restrict user from abusing lift
     if(GPIO.input(topLimitPin) == 0):
         liftDir = LiftDirection.UP.value
-    elif(GPIO.input(bottomLimitSwitch) == 0):
+    elif(GPIO.input(bottomLimitPin) == 0):
         liftDir = LiftDirection.DOWN.value
 
 def whiteFlashlight(status):
