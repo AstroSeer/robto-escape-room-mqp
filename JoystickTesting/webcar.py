@@ -34,12 +34,7 @@ import pigpio #importing GPIO library
 #TODO
 #make it so that if it has not recieved anything from the html for a while, 
     #it stops moving
-
    
-   
-   
-
-
 class CamDirection(Enum):
     NONE = 0
     RIGHT = 1
@@ -138,6 +133,9 @@ GPIO.setup(lightPin, GPIO.IN)
 ESC=13  #Connect the ESC in this GPIO pin 
 speed = 200
 stop = 1500
+
+topLimitPin = 5
+bottomLimitPin = 6
 
 pi = pigpio.pi();
 time.sleep(1)
@@ -241,7 +239,8 @@ def centerCam():
     
 def moveLift():
     global liftDir, buttonVals
-    if(liftDir != LiftDirection.UP.value and buttonVals[7]==1):  #can toggle LiftDirection.UP.value when it hits limit switch?
+    checkLiftLimits()
+    if(liftDir != LiftDirection.UP.value and buttonVals[7]==1):
         pi.set_servo_pulsewidth(ESC, stop-speed)
         if(liftDir == LiftDirection.DOWN.value):
             liftDir = LiftDirection.NONE.value 
@@ -254,25 +253,25 @@ def moveLift():
         
 def checkLiftLimits():
     global liftDir
-#     #pseudocode for how we can restrict user from abusing lift
-#     if(topLiftLimitSwitch == 1):
-#         liftDir = LiftDirection.UP.value
-#     elif(bottomLiftLimitSwitch == 1):
-#         liftDir = LiftDirection.DOWN.value
+    #pseudocode for how we can restrict user from abusing lift
+    if(GPIO.input(topLimitPin) == 0):
+        liftDir = LiftDirection.UP.value
+    elif(GPIO.input(bottomLimitSwitch) == 0):
+        liftDir = LiftDirection.DOWN.value
 
 def whiteFlashlight(status):
     if(status):
         pwm.set_pwm(whitePin, 0, 4000)
     else:
         pwm.set_pwm(whitePin, 0, 0)
-#     pwm.set_pwm(UVPin, 0, 0)
+    pwm.set_pwm(UVPin, 0, 0)
     
 def uvFlashlight(status):
     if(status):
         pwm.set_pwm(UVPin, 0, 4000)    #switch leds on and off
     else:
         pwm.set_pwm(UVPin, 0, 0)
-#     pwm.set_pwm(whitePin, 0, 0)
+    pwm.set_pwm(whitePin, 0, 0)
 
 def magnet(status):
     if(status):
@@ -354,7 +353,7 @@ def update(dt):
     if(UVToggle == Toggle.TURN_ON.value and buttonVals[3]==1):
         uvFlashlight(1)
         UVToggle = Toggle.ON.value
-#         flashlightToggle = Toggle.OFF.value
+        flashlightToggle = Toggle.OFF.value
     elif(UVToggle == Toggle.ON.value and buttonVals[3]==0):
         UVToggle = Toggle.TURN_OFF.value
     elif(UVToggle == Toggle.TURN_OFF.value and buttonVals[3]==1):
@@ -367,7 +366,7 @@ def update(dt):
     if(flashlightToggle == Toggle.TURN_ON.value and buttonVals[4]==1):
         whiteFlashlight(1)
         flashlightToggle = Toggle.ON.value
-#         UVToggle = Toggle.OFF.value
+        UVToggle = Toggle.OFF.value
     elif(flashlightToggle == Toggle.ON.value and buttonVals[4]==0):
         flashlightToggle = Toggle.TURN_OFF.value
     elif(flashlightToggle == Toggle.TURN_OFF.value and buttonVals[4]==1):
@@ -375,7 +374,8 @@ def update(dt):
         flashlightToggle = Toggle.OFF.value
     elif(flashlightToggle == Toggle.OFF.value and buttonVals[4]==0):
         flashlightToggle = Toggle.TURN_ON.value
-        
+
+    # Check Camera Center Button    
     if(buttonVals[5]==1):
         cam_center = True
     else:
@@ -395,10 +395,10 @@ def update(dt):
         
     moveLift()
             
-        # #Copies previous buttons
-        # for i in range(9):
-            # prevButtons[i] = buttonVals[i]
-            
+    # #Copies previous buttons
+    # for i in range(9):
+        # prevButtons[i] = buttonVals[i]
+        
 app = Flask(__name__, static_url_path='')
 
 
@@ -408,7 +408,7 @@ def hello():
 
 
 @app.route("/data")
-def recieve1():#buttonvals,moveAxesVal,camAxesVals):
+def recieve1(): #buttonvals,moveAxesVal,camAxesVals):
     global carDir, camDirX, camDirY, buttonVals, prevButtonState, prevButtons, UVToggle, magnetToggle, flashlightToggle, center_cam
     print("received")
     tempCar = int(request.args.get('car'))
