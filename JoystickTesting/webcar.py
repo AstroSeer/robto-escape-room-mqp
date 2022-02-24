@@ -131,7 +131,7 @@ magnetPin = 4
 GPIO.setup(lightPin, GPIO.IN)
 # For Lift
 ESC=13  #Connect the ESC in this GPIO pin 
-speed = 200
+speed = 200#TODO: adjust speed value, make slower so robot moves slower
 stop = 1500
 
 topLimitPin = 5
@@ -148,7 +148,6 @@ def changespeed(speed):
     #print("changeSpeed") #--- only for testing
     pwm.set_pwm(ENB, 0, speed) #--- add back in
     pwm.set_pwm(ENA, 0, int(speed*.95)) #--- add back in
-
 
 
 
