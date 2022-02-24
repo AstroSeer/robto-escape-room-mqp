@@ -56,7 +56,11 @@ class Camera:
             #draws markers on camera
             rotated_img = cv2.aruco.drawDetectedMarkers(rotated_img, markerCorners, markerIds)           
             #makes image bigger
-            rotated_img = self.rescale(rotated_img, 150)          
+            
+            #rotated_img = self.rescale(rotated_img, 150) #increasing size makes camera feed slow down on html
+            #rotated_img = self.rescale(rotated_img, 80) 
+            rotated_img = self.rescale(rotated_img, 70) #might not need to reduce size?
+                  
             #displays frame
             #cv2.imshow("Frame", rotated_img)
             #saves frame
