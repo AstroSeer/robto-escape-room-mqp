@@ -12,7 +12,8 @@ import flask
 from flask import Response
 import threading
 import atexit
-import RobtoCam#Test
+import RobtoCam #--- add back in
+#import RobtoCamTest #--- only for testing
 import Adafruit_PCA9685 #--- add back in
 from flask import Flask, render_template, request, send_from_directory
 import RPi.GPIO as GPIO #--- add back in
@@ -69,6 +70,7 @@ class LiftDirection(Enum):
     NONE = 0
     UP = 1
 
+#cam = RobtoCam.Camera() #--- only for testing
 cam = RobtoCam.Camera()
 #with this variable cam, can access the object's properties
     #in order to get the information from the vision processing code
@@ -89,6 +91,7 @@ IN4 = 22 #--- add back in
 ENA = 0  #Right motor speed PCA9685 port 0 #--- add back in
 ENB = 1  #Left motor speed PCA9685 port 1 #--- add back in
 move_speed = 1800  # Max pulse length out of 4096 #--- add back in
+#TODO: adjust speed value, make slower so robot moves slower
 turn_speed = 1500 #--- add back in
 
 servo_ctr = 320 #ultrasonic sensor facing front
@@ -129,9 +132,10 @@ UVPin = 3
 whitePin = 2
 magnetPin = 4
 GPIO.setup(lightPin, GPIO.IN)
+
 # For Lift
 ESC=13  #Connect the ESC in this GPIO pin 
-speed = 200#TODO: adjust speed value, make slower so robot moves slower
+speed = 200 #TODO: change name of this, specify that it's for lift
 stop = 1500
 
 topLimitPin = 5
@@ -148,9 +152,6 @@ def changespeed(speed):
     #print("changeSpeed") #--- only for testing
     pwm.set_pwm(ENB, 0, speed) #--- add back in
     pwm.set_pwm(ENA, 0, int(speed*.95)) #--- add back in
-
-
-
 
 def stopcar():
     #print("stopping car")
@@ -240,6 +241,7 @@ def centerCam():
     
 def moveLift():
     global liftDir, buttonVals
+    #return #--- only for testing
     checkLiftLimits()
     if(liftDir != LiftDirection.UP.value and buttonVals[7]==1):
         pi.set_servo_pulsewidth(ESC, stop-speed)
@@ -254,6 +256,7 @@ def moveLift():
         
 def checkLiftLimits():
     global liftDir
+    #return #--- only for testing
     #pseudocode for how we can restrict user from abusing lift
     if(GPIO.input(topLimitPin) == 0):
         liftDir = LiftDirection.UP.value
@@ -261,6 +264,7 @@ def checkLiftLimits():
         liftDir = LiftDirection.DOWN.value
 
 def whiteFlashlight(status):
+    #return #--- only for testing
     if(status):
         pwm.set_pwm(whitePin, 0, 4000)
     else:
@@ -268,6 +272,7 @@ def whiteFlashlight(status):
     pwm.set_pwm(UVPin, 0, 0)
     
 def uvFlashlight(status):
+    #return #--- only for testing
     if(status):
         pwm.set_pwm(UVPin, 0, 4000)    #switch leds on and off
     else:
@@ -275,6 +280,7 @@ def uvFlashlight(status):
     pwm.set_pwm(whitePin, 0, 0)
 
 def magnet(status):
+    #return #--- only for testing
     if(status):
         pwm.set_pwm(magnetPin, 0, 4000)    #switch EM on and off
     else:
@@ -312,6 +318,8 @@ UVToggle = Toggle.OFF.value
 flashlightToggle = Toggle.OFF.value
 magnetToggle = Toggle.OFF.value
 liftDir = LiftDirection.NONE.value
+
+
 def update(dt):
     #TODO: prevent race conditions with Flask app changing values of buttons and axes?? 
     #maybe just set local variables equal to what the values were at the beginning of update?
