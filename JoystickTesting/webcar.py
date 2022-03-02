@@ -17,14 +17,27 @@ import Adafruit_PCA9685 #--- add back in
 from flask import Flask, render_template, request, send_from_directory
 import RPi.GPIO as GPIO #--- add back in
 from enum import Enum
+import paho.mqtt.client as mqtt
 
-
-pi_ip_address='130.215.14.137'#'localhost'
+pi_ip_address='130.215.220.128'#'localhost'
 
 # Initialise the PCA9685 using the default address (0x40).
 pwm = Adafruit_PCA9685.PCA9685() #--- add back in
 pwm.set_pwm_freq(60)#--- add back in
 
+"""
+START MQTT STUFF
+"""
+def on_connect(client, userdata, flags, rc):
+    print(f"Connected with result code {rc}")
+    client.subscribe("esp32/state")
+    
+def on_message(client, userdata, msg):
+    print("Message Received: " + msg.topic + " " + str(msg.payload))
+
+client = mqtt.Client()
+client.on_connect = on_connect
+client.on_message = on_message
 
 import os     #importing os library so as to communicate with the system
 os.system ("sudo pigpiod") #Launching GPIO library
@@ -71,7 +84,7 @@ class LiftDirection(Enum):
 
 cam = RobtoCam.Camera()
 #with this variable cam, can access the object's properties
-    #in order to get the information from the vision processing code
+#in order to get the information from the vision processing code
 
 
 
@@ -88,8 +101,8 @@ IN3 = 27 #--- add back in
 IN4 = 22 #--- add back in
 ENA = 0  #Right motor speed PCA9685 port 0 #--- add back in
 ENB = 1  #Left motor speed PCA9685 port 1 #--- add back in
-move_speed = 1800  # Max pulse length out of 4096 #--- add back in
-turn_speed = 1500 #--- add back in
+move_speed = 1350  # Max pulse length out of 4096 #--- add back in
+turn_speed = 1300 #--- add back in
 
 servo_ctr = 320 #ultrasonic sensor facing front
 
@@ -147,7 +160,8 @@ pi.set_servo_pulsewidth(ESC, stop)
 def changespeed(speed):
     #print("changeSpeed") #--- only for testing
     pwm.set_pwm(ENB, 0, speed) #--- add back in
-    pwm.set_pwm(ENA, 0, int(speed*.95)) #--- add back in
+    pwm.set_pwm(ENA, 0, speed) #--- add back in
+#     pwm.set_pwm(ENA, 0, int(speed*.95)) #--- add back in
 
 
 
@@ -204,33 +218,33 @@ def turnCam():#camDir):
     
     if camDirX == CamDirection.RIGHT.value:
         LRservo_cur = LRservo_cur - step  #120
-        print(LRservo_cur)
+#         print(LRservo_cur)
         if LRservo_cur <= maxRight:
             LRservo_cur = maxRight            
         pwm.set_pwm(LRcam_servo, 0, LRservo_cur)
     elif camDirX == CamDirection.LEFT.value:
         LRservo_cur = LRservo_cur + step #500
-        print(LRservo_cur)
+#         print(LRservo_cur)
         if LRservo_cur >= maxLeft:
             LRservo_cur = maxLeft            
         pwm.set_pwm(LRcam_servo, 0, LRservo_cur)
     
     if camDirY == CamDirection.UP.value:
         UDservo_cur = UDservo_cur - step #120
-        print(UDservo_cur)
+#         print(UDservo_cur)
         if UDservo_cur <= maxUp:
             UDservo_cur = maxUp            
         pwm.set_pwm(UDcam_servo, 0, UDservo_cur)
     elif camDirY == CamDirection.DOWN.value:
         UDservo_cur = UDservo_cur + step #500
-        print(UDservo_cur)
+#         print(UDservo_cur)
         if UDservo_cur >= maxDown:
             UDservo_cur = maxDown            
         pwm.set_pwm(UDcam_servo, 0, UDservo_cur)
 
 # --- PERIPHERAL FUNCTIONS ---
 def centerCam():
-    print("centering cam")
+#     print("centering cam")
     #return #--- only for testing
     global LRservo_cur, UDservo_cur
     LRservo_cur = servo_ctr
@@ -411,7 +425,7 @@ def hello():
 @app.route("/data")
 def recieve1(): #buttonvals,moveAxesVal,camAxesVals):
     global carDir, camDirX, camDirY, buttonVals, prevButtonState, prevButtons, UVToggle, magnetToggle, flashlightToggle, center_cam
-    print("received")
+#     print("received")
     tempCar = int(request.args.get('car'))
     if(tempCar>=0 and tempCar <=8):#TODO check if valid
         carDir = tempCar
@@ -493,17 +507,18 @@ class MyThread(threading.Thread):
 if __name__ == "__main__":
     try:
         stopFlag = threading.Event()
+        client.connect(pi_ip_address)
         thread = MyThread(stopFlag)
         thread.daemon=True
         thread.start()
-        print("starting")
+#         print("starting")
         #atexit.register(cleanup)
         app.run(host=pi_ip_address, port=8000, debug=False)#set debug off??
     finally:
         cleanup()
  
 def cleanup():
-    print("ending")
+#     print("ending")
     pwm.set_pwm(LRcam_servo, 0, servo_ctr)
     pwm.set_pwm(UDcam_servo, 0, servo_ctr)
     GPIO.cleanup()

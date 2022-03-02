@@ -6,8 +6,8 @@
 from flask import Flask, render_template, Response
 
 
-#from picamera.array import PiRGBArray  --- add back in
-#from picamera import PiCamera as pc --- add back in 
+from picamera.array import PiRGBArray
+from picamera import PiCamera as pc
 import time
 import cv2
 import numpy as np
@@ -17,8 +17,8 @@ time.sleep(0.1)
 class Camera:
     #app = Flask(__name__)
     def __init__(self):
-        #self.video = cv2.VideoCapture(0) --- add back in
-        self.video = cv2.VideoCapture(2, cv2.CAP_DSHOW) #only for testing
+        self.video = cv2.VideoCapture(0)
+#         self.video = cv2.VideoCapture(2, cv2.CAP_DSHOW) #only for testing
         
         # video.set(cv2.CAP_PROP_FPS, 70) #sets FPS
         # video.set(3, 640) #sets first resolution
@@ -58,13 +58,13 @@ class Camera:
             #makes image bigger
             rotated_img = self.rescale(rotated_img, 150)          
             #displays frame
-            #cv2.imshow("Frame", rotated_img)
+            cv2.imshow("Frame", rotated_img)
             #saves frame
         #     cv2.imwrite("led_test.jpg", rotated_img)
-            success, buffer = cv2.imencode('.jpg', rotated_img)
-            fram = buffer.tobytes()
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + fram + b'\r\n')  # concat frame one by one and show result
+#             success, buffer = cv2.imencode('.jpg', rotated_img)
+#             fram = buffer.tobytes()
+#             yield (b'--frame\r\n'
+#                    b'Content-Type: image/jpeg\r\n\r\n' + fram + b'\r\n')  # concat frame one by one and show result
             #if cv2.waitKey(1) == ord('q'):
              #   break
         self.video.release()
@@ -83,5 +83,5 @@ class Camera:
 
 
     
-# c = Camera()
-# c.start()
+c = Camera()
+c.start()
