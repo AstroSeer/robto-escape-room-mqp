@@ -21,8 +21,8 @@ class Camera:
         #self.video = cv2.VideoCapture(2, cv2.CAP_DSHOW) #only for testing
         
         # video.set(cv2.CAP_PROP_FPS, 70) #sets FPS
-        # video.set(3, 640) #sets first resolution
-        # video.set(4, 480) #sets second resolution
+        self.video.set(3, 768) #sets first resolution
+        self.video.set(4, 432) #sets second resolution
         self.video.set(cv2.CAP_PROP_BUFFERSIZE, 1)
         
         if not self.video.isOpened():

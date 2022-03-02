@@ -270,9 +270,12 @@ def checkLiftLimits():
     global liftDir
     #pseudocode for how we can restrict user from abusing lift
     if(GPIO.input(topLimitPin) == 0):
+#         print("top switch hit")
         liftDir = LiftDirection.UP.value
     elif(GPIO.input(bottomLimitPin) == 0):
+#         print("bottom switch hit")
         liftDir = LiftDirection.DOWN.value
+    
 
 def whiteFlashlight(status):
     if(status):
