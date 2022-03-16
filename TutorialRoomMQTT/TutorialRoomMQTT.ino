@@ -24,7 +24,7 @@ CRGB dockLed[numBlockDockLed];
 const char *ssid = "WPI-Open";
 const char *password = NULL;
 const char *ID = "esp_boi";  // Name of our device, must be unique
-IPAddress broker(130, 215, 123, 145); // IP address of your MQTT broker eg. 192.168.1.50
+IPAddress broker(130, 215, 220, 128); // IP address of your MQTT broker eg. 192.168.1.50
 WiFiClient wclient;
 PubSubClient client(wclient); // Setup MQTT client
 
@@ -75,12 +75,12 @@ const int numIRReadings = 50;
 int totalIR;
 
 /* Room States */
-enum ROOM {T_Start, T_BlockDock, T_Door, End};  //ADD NEW STATES TO get_state() METHOD
-ROOM state = T_Start;
-ROOM nextState;
+enum ROOM {Start, BlockDock, Door, End};  //ADD NEW STATES TO get_state() METHOD
+static unsigned int state = Start;
+static unsigned int nextState;
 
 /* Turns enumerated state into string; to display to esp */
-char* get_state(ROOM state){
+char* get_state(unsigned int state){
   char* retState[] = {"Start", "Block Dock", "Door", "End"}; //add more states (in order of enumeration)...
   return retState[state];
 }
@@ -174,14 +174,22 @@ bool checkIRDoor() {
     totalIR = totalIR + analogRead(irPin);
   }
   irDistance = totalIR / numIRReadings;  //find average sensor reading
-  Serial.println(irDistance);
-  if (irDistance > doorThreshold) {return true;}
-  else {return false;}
+  //Serial.println(irDistance);
+  if (irDistance > doorThreshold) {
+    return true;
+  } else {
+    return false;
+  }
 }
 
 /* Handlers */
-void handleBlockDock1() {if (state == BlockDock) state = Door;}
-void handleIRDoor() {if (state == Door) state = End;}
+void handleBlockDock1() {
+  if (state == BlockDock) state = Door;
+  dockLed[0] = CRGB::Green; //update led color
+}
+void handleIRDoor() {
+  if (state == Door) state = End;
+}
 
 void loop() {
   FastLED.show(); //display current LED state

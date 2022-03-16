@@ -53,7 +53,7 @@ const int irPin = 25; // 1100 no robot, < 1400 robot detected
 float doorThreshold = 2000;
 float irDistance;
 const int numIRReadings = 50;
-int totalIR;
+int totalIR = 0;
 
 enum Room {Start, BlockDock, Door, End};
 static unsigned int state = Start;
