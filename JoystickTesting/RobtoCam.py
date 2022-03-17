@@ -3,10 +3,7 @@
 #
 # This is the pi camera class. All we have to do to use
 #   it is instantiate it and call the start() method.
-from asyncio.windows_events import NULL
 from flask import Flask, render_template, Response
-
-
 from picamera.array import PiRGBArray  #--- add back in
 from picamera import PiCamera as pc #--- add back in 
 import time
@@ -18,17 +15,18 @@ time.sleep(0.1)
 class Camera:
     #app = Flask(__name__)
     def __init__(self):
-        self.video = cv2.VideoCapture(0) #--- add back in
+        self.video = cv2.VideoCapture(0) 
         #self.video = cv2.VideoCapture(2, cv2.CAP_DSHOW) #only for testing
         
         # video.set(cv2.CAP_PROP_FPS, 70) #sets FPS
         # video.set(3, 640) #sets first resolution
         # video.set(4, 480) #sets second resolution
-        self.video.set(cv2.CAP_PROP_BUFFERSIZE, 5)
+        self.video.set(cv2.CAP_PROP_BUFFERSIZE, 3)
 
-        self.frame = NULL
-        self.markerCorners = NULL
-        self.markerIds = NULL
+        self.frame = None
+        self.markerCorners = None
+        self.markerIds = None
+        self.terminalState = "accepted"
         
         if not self.video.isOpened():
             print("cannot open video")
@@ -62,18 +60,21 @@ class Camera:
             #print(markerIds)
             
             #draws markers on camera
-            rotated_img = cv2.aruco.drawDetectedMarkers(self.frame, markerCorners, markerIds)           
+#             self.frame = cv2.aruco.drawDetectedMarkers(self.frame, markerCorners, markerIds)           
             
             #gets perimeter of detected marker
-            aruco_perimeter = cv2.arcLength(markerCorners[0], True)
-            print(aruco_perimeter)
-
+            if markerCorners:
+                aruco_perimeter = cv2.arcLength(markerCorners[0], True)
+                print(aruco_perimeter)
+                
+            if len(markerCorners) == 4:
+                self.set_terminal(self.terminalState)
 
             #makes image bigger
-            rotated_img = self.rescale(self.frame, 70) 
+#             self.frame = self.rescale(self.frame, 70) 
             
             #displays frame
-            #cv2.imshow("Frame", rotated_img)
+#             cv2.imshow("Frame", self.frame)
             #saves frame
         #     cv2.imwrite("led_test.jpg", rotated_img)
             success, buffer = cv2.imencode('.jpg', self.frame)
@@ -103,12 +104,15 @@ class Camera:
             terminal_status = cv2.imread("terminal/PWD_BAD2.png")
         else:
             terminal_status = cv2.imread("terminal/PWD_START.png")
+            
+                
 
-        index = np.squeeze(self.markerIds[0])
-        refPt1 = np.squeeze(self.markerCorners[index[0]])[1]
+        index = np.squeeze(np.where(self.markerIds==0))
+        refPt1 = np.squeeze(self.markerCorners[index[0]])[0]
         
-        index = np.squeeze(self.markerIds[1])
-        refPt2 = np.squeeze(self.markerCorners[index[0]])[2]
+#         index = np.squeeze(self.markerIds[1])
+        index = np.squeeze(np.where(self.markerIds==3))
+        refPt2 = np.squeeze(self.markerCorners[index[0]])[1]
 
         distance = np.linalg.norm(refPt1-refPt2)
         
@@ -116,12 +120,12 @@ class Camera:
         pts_dst = [[refPt1[0] - round(scalingFac*distance), refPt1[1] - round(scalingFac*distance)]]
         pts_dst = pts_dst + [[refPt2[0] + round(scalingFac*distance), refPt2[1] - round(scalingFac*distance)]]
         
-        index = np.squeeze(self.markerIds[2])
-        refPt3 = np.squeeze(self.markerCorners[index[0]])[0]
+        index = np.squeeze(np.where(self.markerIds==1))
+        refPt3 = np.squeeze(self.markerCorners[index[0]])[2]
         pts_dst = pts_dst + [[refPt3[0] + round(scalingFac*distance), refPt3[1] + round(scalingFac*distance)]]
 
-        index = np.squeeze(self.markerIds[3])
-        refPt4 = np.squeeze(self.markerCorners[index[0]])[0]
+        index = np.squeeze(np.where(self.markerIds==2))
+        refPt4 = np.squeeze(self.markerCorners[index[0]])[3]
         pts_dst = pts_dst + [[refPt4[0] - round(scalingFac*distance), refPt4[1] + round(scalingFac*distance)]]
 
         pts_src = [[0,0], [terminal_status.shape[1], 0], [terminal_status.shape[1], terminal_status.shape[0]], [0, terminal_status.shape[0]]]
@@ -130,7 +134,7 @@ class Camera:
         pts_dst_m = np.asarray(pts_dst)
         
         # Calculate Homography
-        h, status = cv2.findHomography(pts_src, pts_dst)
+        h, status = cv2.findHomography(pts_src_m, pts_dst_m)
         # Warp source image to destination based on homography
         warped_image = cv2.warpPerspective(terminal_status, h, (self.frame.shape[1],self.frame.shape[0]))
         
@@ -146,11 +150,11 @@ class Camera:
         warped_image = warped_image.astype(float)
         mask3 = np.zeros_like(warped_image)
         for i in range(0, 3):
-	        mask3[:,:,i] = mask/255
+            mask3[:,:,i] = mask/255
 
         # Copy the masked warped image into the original frame in the mask region
         warped_image_masked = cv2.multiply(warped_image, mask3)
-        frame_masked = cv2.multiply(frame.astype(float), 1-mask3)
+        frame_masked = cv2.multiply(self.frame.astype(float), 1-mask3)
         self.frame = cv2.add(warped_image_masked, frame_masked)
 
     

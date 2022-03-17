@@ -19,7 +19,7 @@ import RPi.GPIO as GPIO #--- add back in
 from enum import Enum
 
 
-pi_ip_address='130.215.14.137'#'localhost'
+pi_ip_address='130.215.172.60'#'localhost'
 
 # Initialise the PCA9685 using the default address (0x40).
 pwm = Adafruit_PCA9685.PCA9685() #--- add back in
@@ -350,6 +350,8 @@ def update(dt):
         centerCam()
     else:
         turnCam()
+    
+#     cam.set_terminal("default")
     
      # Checks UV Flashlight
     if(UVToggle == Toggle.TURN_ON.value and buttonVals[3]==1):
