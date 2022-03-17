@@ -4,6 +4,7 @@
 # This is the pi camera class. All we have to do to use
 #   it is instantiate it and call the start() method.
 from flask import Flask, render_template, Response
+from paho.mqtt import client
 from picamera.array import PiRGBArray  #--- add back in
 from picamera import PiCamera as pc #--- add back in 
 import time
@@ -35,7 +36,7 @@ class Camera:
     def rescale(self, image, percent):
         width = int(image.shape[1] * percent/100)
         height = int(image.shape[0] * percent/100)
-        dim= (width, height)
+        dim = (width, height)
         return cv2.resize(image, dim, interpolation=cv2.INTER_AREA)
 
     def start(self):
@@ -104,13 +105,11 @@ class Camera:
             terminal_status = cv2.imread("terminal/PWD_BAD2.png")
         else:
             terminal_status = cv2.imread("terminal/PWD_START.png")
-            
-                
+
 
         index = np.squeeze(np.where(self.markerIds==0))
         refPt1 = np.squeeze(self.markerCorners[index[0]])[0]
         
-#         index = np.squeeze(self.markerIds[1])
         index = np.squeeze(np.where(self.markerIds==3))
         refPt2 = np.squeeze(self.markerCorners[index[0]])[1]
 
