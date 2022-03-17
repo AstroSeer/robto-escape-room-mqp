@@ -18,15 +18,15 @@ class Camera:
         self.video = cv2.VideoCapture(0) 
         #self.video = cv2.VideoCapture(2, cv2.CAP_DSHOW) #only for testing
         
-        # video.set(cv2.CAP_PROP_FPS, 70) #sets FPS
-        # video.set(3, 640) #sets first resolution
-        # video.set(4, 480) #sets second resolution
-        self.video.set(cv2.CAP_PROP_BUFFERSIZE, 3)
+        self.video.set(cv2.CAP_PROP_FPS, 32) #sets FPS
+        self.video.set(3, 768) #sets first resolution
+        self.video.set(4, 432) #sets second resolution
+        self.video.set(cv2.CAP_PROP_BUFFERSIZE, 5)
 
         self.frame = None
         self.markerCorners = None
         self.markerIds = None
-        self.terminalState = "accepted"
+        self.terminalState = "default"
         
         if not self.video.isOpened():
             print("cannot open video")
@@ -60,18 +60,18 @@ class Camera:
             #print(markerIds)
             
             #draws markers on camera
-#             self.frame = cv2.aruco.drawDetectedMarkers(self.frame, markerCorners, markerIds)           
+            # self.frame = cv2.aruco.drawDetectedMarkers(self.frame, markerCorners, markerIds)           
             
             #gets perimeter of detected marker
-            if markerCorners:
-                aruco_perimeter = cv2.arcLength(markerCorners[0], True)
-                print(aruco_perimeter)
+            if self.markerCorners:
+                aruco_size = cv2.arcLength(markerCorners[0], True)
+#                 print(aruco_perimeter)
                 
-            if len(markerCorners) == 4:
+            if(len(self.markerCorners) == 4) and (aruco_size > 100):
                 self.set_terminal(self.terminalState)
 
             #makes image bigger
-#             self.frame = self.rescale(self.frame, 70) 
+            self.frame = self.rescale(self.frame, 70) 
             
             #displays frame
 #             cv2.imshow("Frame", self.frame)
