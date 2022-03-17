@@ -12,14 +12,14 @@ import flask
 from flask import Response
 import threading
 import atexit
-import RobtoCam#Test
+import RobtoCam
 import Adafruit_PCA9685 #--- add back in
 from flask import Flask, render_template, request, send_from_directory
 import RPi.GPIO as GPIO #--- add back in
 from enum import Enum
 import paho.mqtt.client as mqtt
 
-pi_ip_address='130.215.220.128'#'localhost'
+pi_ip_address='130.215.172.60'#'localhost'
 
 # Initialise the PCA9685 using the default address (0x40).
 pwm = Adafruit_PCA9685.PCA9685() #--- add back in
@@ -366,6 +366,8 @@ def update(dt):
         centerCam()
     else:
         turnCam()
+    
+#     cam.set_terminal("default")
     
      # Checks UV Flashlight
     if(UVToggle == Toggle.TURN_ON.value and buttonVals[3]==1):
