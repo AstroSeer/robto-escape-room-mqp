@@ -22,7 +22,7 @@ class Camera:
         self.video.set(cv2.CAP_PROP_FPS, 32) #sets FPS
         self.video.set(3, 768) #sets first resolution
         self.video.set(4, 432) #sets second resolution
-        self.video.set(cv2.CAP_PROP_BUFFERSIZE, 5)
+        self.video.set(cv2.CAP_PROP_BUFFERSIZE, 1)
 
         self.frame = None
         self.markerCorners = None
