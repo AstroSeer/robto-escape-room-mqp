@@ -19,7 +19,6 @@ class Camera:
     def __init__(self):
         self.video = cv2.VideoCapture(0) #--- add back in
         #self.video = cv2.VideoCapture(2, cv2.CAP_DSHOW) #only for testing
-        
         # video.set(cv2.CAP_PROP_FPS, 70) #sets FPS
         # video.set(3, 640) #sets first resolution
         # video.set(4, 480) #sets second resolution

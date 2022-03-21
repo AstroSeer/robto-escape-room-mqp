@@ -19,11 +19,12 @@ class Camera:
     def __init__(self):
         #self.video = cv2.VideoCapture(0) --- add back in
         self.video = cv2.VideoCapture(2, cv2.CAP_DSHOW) #only for testing
-        
+        print(self.video.get(3))
+        print(self.video.get(4))
         # video.set(cv2.CAP_PROP_FPS, 70) #sets FPS
-        # video.set(3, 640) #sets first resolution
-        # video.set(4, 480) #sets second resolution
-        self.video.set(cv2.CAP_PROP_BUFFERSIZE, 5)
+        self.video.set(3, 426) #sets first resolution
+        self.video.set(4, 240) #sets second resolution
+        self.video.set(cv2.CAP_PROP_BUFFERSIZE, 1)
         
         if not self.video.isOpened():
             print("cannot open video")
@@ -71,6 +72,7 @@ class Camera:
                    b'Content-Type: image/jpeg\r\n\r\n' + fram + b'\r\n')  # concat frame one by one and show result
             #if cv2.waitKey(1) == ord('q'):
              #   break
+            
         self.video.release()
         cv2.destroyAllWindows()
     

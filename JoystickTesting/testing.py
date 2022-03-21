@@ -6,6 +6,9 @@
 # Osoyoo Raspberry Pi Web Camera Control Robot Car
 # tutorial url: https://osoyoo.com/?p=32066
 
+
+#testt\Scripts\activate.bat
+
 from __future__ import division
 import time
 import flask
@@ -35,7 +38,7 @@ pi_ip_address='localhost'#'130.215.9.186' #'0.0.0.0'#'192.168.0.32' # replace 19
 #make it so that if it has not recieved anything from the html for a while,
     #it stops moving
 
-
+usingCam = False #only for testing
 class CamDirection(Enum):
     NONE = 0
     RIGHT = 1
@@ -60,17 +63,19 @@ class Button(Enum):
     ON = 1
     
 class Toggle(Enum):
-    TURN_OFF = -1
-    OFF = 0
-    ON = 1
-    TURN_ON = 2
+    TURN_OFF = -1 #is on, next press will turn off
+    OFF = 0 # is off
+    ON = 1 #is on
+    TURN_ON = 2 #is off, next press will turn on
     
 class LiftDirection(Enum):
     DOWN = -1
     NONE = 0
     UP = 1
+if(usingCam):    #--- only for testing
+    cam = RobtoCamTest.Camera() #--- only for testing
+
     
-cam = RobtoCamTest.Camera() #--- only for testing
 #cam = RobtoCam.Camera() #--- add back in
 #with this variable cam, can access the object's properties
     #in order to get the information from the vision processing code
@@ -90,9 +95,9 @@ cam = RobtoCamTest.Camera() #--- only for testing
 #IN4 = 22 #--- add back in
 #ENA = 0  #Right motor speed PCA9685 port 0 #--- add back in
 #ENB = 1  #Left motor speed PCA9685 port 1 #--- add back in
-#move_speed = 1800  # Max pulse length out of 4096 #--- add back in
+#move_speed = 1200 #1800  # Max pulse length out of 4096 #--- add back in
 #TODO: adjust speed value, make slower so robot moves slower
-#turn_speed = 1500 #--- add back in
+#turn_speed = 1000 #1500 #--- add back in
 
 servo_ctr = 320 #ultrasonic sensor facing front
 
@@ -310,7 +315,15 @@ buttonVals = [0,0,0,0,0,0,0,0,0]
 #6: Electromagnet toggle
 #7: Lift up
 #8: Lift down
-
+class ButtonNum(Enum):
+    UV  = 3
+    FLASH = 4
+    CENTER = 5
+    EM = 6
+    LIFT_UP = 7
+    LIFT_DOWN = 8
+#TODO: use ButtonNum.[button wanted].value instead of hard coded numbers!
+    #so that if buttons change order, only have to change the code in this enum and nowhere else!!
 
 prevButtons = [0,0,0,0,0,0,0,0,0]
 prevButtonState = [0,0,0,0,0,0,0,0,0]
@@ -318,7 +331,8 @@ UVToggle = Toggle.OFF.value
 flashlightToggle = Toggle.OFF.value
 magnetToggle = Toggle.OFF.value
 liftDir = LiftDirection.NONE.value
-
+peripheralUpdates = True;
+#waitingForUpdates = False;
 
 def update(dt):
     #TODO: prevent race conditions with Flask app changing values of buttons and axes?? 
@@ -370,7 +384,9 @@ def update(dt):
         UVToggle = Toggle.OFF.value
     elif(UVToggle == Toggle.OFF.value and buttonVals[3]==0):
         UVToggle = Toggle.TURN_ON.value
-        
+   
+    
+    
     # Checks flashlight
     if(flashlightToggle == Toggle.TURN_ON.value and buttonVals[4]==1):
         whiteFlashlight(1)
@@ -410,12 +426,149 @@ def update(dt):
             
 app = Flask(__name__, static_url_path='')
 
+countDebug = 0;
 
 @app.route("/")
 def hello():
-   return render_template('testing.html')
+    global countDebug
+    print(countDebug)
+    countDebug = countDebug+1;
+    
+    text = "<bookstore><book>" + "<title>Everyday Italian</title>" + "<author>Giada De Laurentiis</author>" + "<year>2005</year>" +"</book></bookstore>";
+    # data = [
+        # {
+            # 'name':'Audrin',
+            # 'place': 'kaka',
+            # 'mob': '7736'
+        # },
+        # {
+            # 'name': 'Stuvard',
+            # 'place': 'Goa',
+            # 'mob' : countDebug
+        # }
+    # ]
+    data = text
+    return render_template('testing.html',)# data=data, mimetype='text/xml');
    
    
+   
+   
+  
+   
+   
+   
+promptingForCode = False;
+currentCode = 0;
+
+codeList = ["9435", "blah"];
+   
+from flask import Response
+import json
+
+@app.route("/sendCode")
+def recieveCode(): 
+    codeInput = request.args.get('code');
+    print(codeInput);
+    data = [0,0];
+    
+    if(promptingForCode):
+        data[0] = 1;#looking for code
+    else:
+        data[0] = 0;#not looking for code
+        
+    if(codeInput == codeList[currentCode]):
+        data[1] = 1; #correct code
+    else:
+        data[1] = 0; #incorrect code
+    return Response(json.dumps(data), mimetype = 'text/xml')
+    
+     
+     
+   #for peripheral continuous upates
+   
+   #Options other than SSE:
+   #https://nitin15j.medium.com/push-over-http-ba42f2e1bdfc
+   
+   
+   #https://maxhalford.github.io/blog/flask-sse-no-deps/
+   #SERVER-SENT EVENT!! MAKE HTML LISTEN FOR UPDATES FROM FLASK!
+   #PREVENT LAG AND TIMEOUTS FROM CONSTANT XML REQUESTS
+   # import queue
+
+    # class MessageAnnouncer:
+
+        # def __init__(self):
+            # self.listeners = []
+
+        # def listen(self):
+            # q = queue.Queue(maxsize=5)
+            # self.listeners.append(q)
+            # return q
+
+        # def announce(self, msg):
+            # for i in reversed(range(len(self.listeners))):
+                # try:
+                    # self.listeners[i].put_nowait(msg)
+                # except queue.Full:
+                    # del self.listeners[i]
+@app.route("/ask")
+def responding(): 
+    #global countDebug
+    #print(countDebug)
+    #countDebug = countDebug+1;
+    
+    #text = "<bookstore><book>" + "<title>Everyday Italian</title>" + "<author>Giada De Laurentiis</author>" + "<year>2005</year>" +"</book></bookstore>";
+    
+    # if(waitingForUpdates):
+        
+    # while(!peripheralUpdates):
+        # waitingForUpdates = True;
+    # waitingForUpdates = False;
+    
+    data ={"peripherals": \
+            {ButtonNum.UV.value: UVToggle, \
+            ButtonNum.FLASH.value: flashlightToggle, \
+            ButtonNum.EM.value: magnetToggle},\
+        "prompt": "",\
+        "message": ""} 
+        
+        #"prompt", prompting for a code input 
+        #"message", a message to the player to be displayed onscreen
+    #print(data)
+
+    #d['fish'] = 'wet'     # Set an entry in a dictionary
+    #print(d['fish'])      # Prints "wet"
+    
+    #return render_template('testing.html', data=data, mimetype='text/xml');
+    return Response(json.dumps(data), mimetype = 'application/json')#Response(data);#, mimetype='text/xml');
+   
+    # UVToggle = Toggle.OFF.value
+    # flashlightToggle = Toggle.OFF.value
+    # magnetToggle = Toggle.OFF.value
+    # liftDir = LiftDirection.NONE.value
+   # class ButtonNum(Enum):
+    # UV  = 3
+    # FLASH = 4
+    # CENTER = 5
+    # EM = 6
+    # LIFT_UP = 7
+    # LIFT_DOWN = 8
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 @app.route("/data")
 def recieve1():#buttonvals,moveAxesVal,camAxesVals):
     global carDir, camDirX, camDirY, buttonVals, prevButtonState, prevButtons, UVToggle, magnetToggle, flashlightToggle, center_cam
@@ -447,7 +600,19 @@ def recieve1():#buttonvals,moveAxesVal,camAxesVals):
     for i in range(9):
         prevButtons[i] = buttonVals[i]
     
-    return render_template('testing.html')
+    # data = [
+        # {
+            # 'name':'Audrin',
+            # 'place': 'kaka',
+            # 'mob': '7736'
+        # },
+        # {
+            # 'name': 'Stuvard',
+            # 'place': 'Goa',
+            # 'mob' : '546464'
+        # }
+    # ]
+    return render_template('testing.html')#, data=data)
     
 @app.route("/<buttonvals>/<moveAxesVal>/<camAxesVals>")
 def recieve(buttonvals,moveAxesVal,camAxesVals):
@@ -473,8 +638,11 @@ def recieve(buttonvals,moveAxesVal,camAxesVals):
 @app.route('/video_feed')
 def video_feed():
     #Video streaming route. Put this in the src attribute of an img tag
-    return Response(cam.start(), mimetype='multipart/x-mixed-replace; boundary=frame')
-        
+    if(usingCam):#--- only for testing
+        return Response(cam.start(), mimetype='multipart/x-mixed-replace; boundary=frame')#--- only for testing
+    else:#--- only for testing
+        return#--- only for testing
+    #return Response#cam.start(), mimetype='multipart/x-mixed-replace; boundary=frame') #--- add back in
         
         
 class MyThread(threading.Thread):
@@ -492,29 +660,30 @@ class MyThread(threading.Thread):
             old_time = time.time()
             
             
-
+def cleanup():
+    print("ending")
+    #pwm.set_pwm(LRcam_servo, 0, servo_ctr) #--- add back in
+    #pwm.set_pwm(UDcam_servo, 0, servo_ctr) #--- add back in
+    #GPIO.cleanup() #--- add back in
+    
 # def closeThreads():
     # global stopFlag
     # print("closing time")
     # stopFlag.set()
     
 if __name__ == "__main__":
-    stopFlag = threading.Event()
-    thread = MyThread(stopFlag)
-    thread.daemon=True
-    thread.start()
-    print("starting")
+    try:
+        stopFlag = threading.Event()
+        thread = MyThread(stopFlag)
+        thread.daemon=True
+        thread.start()
+        print("starting")
         #atexit.register(cleanup)
         app.run(host=pi_ip_address, port=8000, debug=False)#set debug off??
     finally:
         cleanup()
     
- 
-def cleanup():
-    print("ending")
-    pwm.set_pwm(LRcam_servo, 0, servo_ctr)
-    pwm.set_pwm(UDcam_servo, 0, servo_ctr)
-    GPIO.cleanup()
+
 
 #In the code that started the timer, you can then set the stopped event to stop the timer.
 

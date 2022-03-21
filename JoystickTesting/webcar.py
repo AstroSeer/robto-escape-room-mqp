@@ -492,7 +492,12 @@ class MyThread(threading.Thread):
             old_time = time.time()
             
 
-
+def cleanup():
+    print("ending")
+    pwm.set_pwm(LRcam_servo, 0, servo_ctr)
+    pwm.set_pwm(UDcam_servo, 0, servo_ctr)
+    GPIO.cleanup()
+    
 # def closeThreads():
     # global stopFlag
     # print("closing time")
@@ -510,11 +515,7 @@ if __name__ == "__main__":
     finally:
         cleanup()
  
-def cleanup():
-    print("ending")
-    pwm.set_pwm(LRcam_servo, 0, servo_ctr)
-    pwm.set_pwm(UDcam_servo, 0, servo_ctr)
-    GPIO.cleanup()
+
 
 #In the code that started the timer, you can then set the stopped event to stop the timer.
 
