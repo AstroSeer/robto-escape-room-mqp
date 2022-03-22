@@ -82,122 +82,123 @@ ul {
 <p id="demo"></p>->
 <!--<button class = "Config" onclick="alert('You pressed the button!')">Configure Gamepads</button>-->
 
-<label for="code">Input Code:</label>
-<input type="text" id="code" maxlength="50" name="code">
-<button id ="submitCode" onclick = "sendCode();">Submit</button><br><br>
+
+<label for="passcode">Input Code:</label>
+<input type="text" id="passcode" maxlength="50" name="code">
+<button id ="submitPasscode" onclick = "sendPasscode();">Submit</button><br><br>
+
+<div id = "debug" style = "display:none;">
+	<button id="button1" style="display:block;" onclick="toggleText('button1', 'Configure Gamepads', 'Cancel'); toggleElement('configuration menu'); closeDropdown(); ">Configure Gamepads</button><!-- document.getElementById('button3').style.display = 'block';this.style.display = 'none';-->
 
 
-<button id="button1" style="display:block;" onclick="toggleName(); toggleElement('configuration menu'); closeDropdown(); ">Configure Gamepads</button><!-- document.getElementById('button3').style.display = 'block';this.style.display = 'none';-->
-
-
-<div id = "configuration menu" style = "display:none;">
-	<label for="gamepadType">Gamepad Type</label>
-	<select name="gamepadType" id="gamepadType" onchange = "configure()">
-		<option value="None">None</option>
-		<option value="Cont">Game Controller</option>
-		<option value="Phys">Physical Interface</option>
-	</select>
-
-
-	<div id = "gamepad1 select">
-		<label for="gamepad1">Gamepad 1</label>
-		<select name="gamepad1" id="gamepad1">
+	<div id = "configuration menu" style = "display:none;">
+		<label for="gamepadType">Gamepad Type</label>
+		<select name="gamepadType" id="gamepadType" onchange = "configure()">
 			<option value="None">None</option>
-			<option value="rigatoni">Rigatoni</option>
-			<option value="dave">Dave</option>
-			<option value="pumpernickel">Pumpernickel</option>
-			<option value="reeses">Reeses</option>
+			<option value="Cont">Game Controller</option>
+			<option value="Phys">Physical Interface</option>
 		</select>
+
+
+		<div id = "gamepad1 select">
+			<label for="gamepad1">Gamepad 1</label>
+			<select name="gamepad1" id="gamepad1">
+				<option value="None">None</option>
+				<option value="rigatoni">Rigatoni</option>
+				<option value="dave">Dave</option>
+				<option value="pumpernickel">Pumpernickel</option>
+				<option value="reeses">Reeses</option>
+			</select>
+		</div>
+		
+		<div id = "gamepad2 select" style = "display:none;">
+			<label for="gamepad2">Gamepad 2</label>
+			<select name="gamepad2" id="gamepad2">
+				<option value="None">None</option>
+				<option value="rigatoni">Rigatoni</option>
+				<option value="dave">Dave</option>
+				<option value="pumpernickel">Pumpernickel</option>
+				<option value="reeses">Reeses</option>
+			</select>
+		</div>
+		<button id='update' onclick="toggleText('button1', 'Configure Gamepads', 'Cancel'); toggleElement('configuration menu'); closeDropdown(); ">Update Configuration</button>
+		<button id='default'>Default</button>
 	</div>
-	
-	<div id = "gamepad2 select" style = "display:none;">
-		<label for="gamepad2">Gamepad 2</label>
-		<select name="gamepad2" id="gamepad2">
-			<option value="None">None</option>
-			<option value="rigatoni">Rigatoni</option>
-			<option value="dave">Dave</option>
-			<option value="pumpernickel">Pumpernickel</option>
-			<option value="reeses">Reeses</option>
-		</select>
-	</div>
-	<button id='update' onclick="toggleName(); toggleElement('configuration menu'); closeDropdown(); ">Update Configuration</button>
-	<button id='default'>Default</button>
+
+	<!--<div id = "configuration menu" style = "display:none;">
+		
+		<div class="dropdown" > <!-- select gamepad type-- >
+		  <button id = "GamepadType" class="dropbtn">Gamepad Type</button> <!--onclick="dropdownToggle('GamepadTypeDropdown')" -- >
+		  <div id="GamepadTypeDropdown" class="dropdown-content">
+			<button onclick="configure('controller')" id = "Cont">Game Controller</button>
+			<button onclick="configure('interface')" id = "Phys">Physical Interface</button>
+		  </div>
+		</div>
+
+		<div class="dropdown" <!--id = "GamepadDrop1">--> <!-- select gamepad 1-- >
+		  <button style="display:none;" id = "Gamepad1" class="dropbtn">Gamepad 1</button>
+		  <div id="Gamepad1Dropdown" class="dropdown-content">
+			<button id = "None1">None</button>
+			<!-- as many buttons as there are gamepads connected. 
+				update in the javascript section-- >
+		  
+		  </div>
+		</div>
+
+		<div class="dropdown" <!--id = "GamepadDrop2"> --><!-- select gamepad 2 -- >
+		  <button style="display:none;" id = "Gamepad2" class="dropbtn">Gamepad 2</button>
+		  <div id="Gamepad2Dropdown" class="dropdown-content">
+			<button id = "None2">None</button>
+			<!-- as many buttons as there are gamepads connected. 
+				update in the javascript section-- >
+		  </div>
+		</div>
+		<button id='default'>Default</button>
+	</div> -->
+	<br>
+	<button id= "add gamepad" onclick="addGamepadDebug()">Add Gamepad</button>
+	<button id= "remove gamepad">Remove Gamepad</button>
+	<button id = "test response" onclick = "getPeriphUpdates()">Check Peripherals (debug)</button>
+	<label for="periphCheckToggle">Toggle Peripheral Check (debug)</label>
+	<button id = "periphChecktoggle" onclick = "toggleText('periphChecktoggle', 'Turn On', 'Turn Off'); toggleAskUpdate()">Turn Off</button>
 </div>
-<!--<div id = "configuration menu" style = "display:none;">
-	
-	<div class="dropdown" > <!-- select gamepad type-- >
-	  <button id = "GamepadType" class="dropbtn">Gamepad Type</button> <!--onclick="dropdownToggle('GamepadTypeDropdown')" -- >
-	  <div id="GamepadTypeDropdown" class="dropdown-content">
-		<button onclick="configure('controller')" id = "Cont">Game Controller</button>
-		<button onclick="configure('interface')" id = "Phys">Physical Interface</button>
-	  </div>
-	</div>
-
-	<div class="dropdown" <!--id = "GamepadDrop1">--> <!-- select gamepad 1-- >
-	  <button style="display:none;" id = "Gamepad1" class="dropbtn">Gamepad 1</button>
-	  <div id="Gamepad1Dropdown" class="dropdown-content">
-		<button id = "None1">None</button>
-		<!-- as many buttons as there are gamepads connected. 
-			update in the javascript section-- >
-	  
-	  </div>
-	</div>
-
-	<div class="dropdown" <!--id = "GamepadDrop2"> --><!-- select gamepad 2 -- >
-	  <button style="display:none;" id = "Gamepad2" class="dropbtn">Gamepad 2</button>
-	  <div id="Gamepad2Dropdown" class="dropdown-content">
-		<button id = "None2">None</button>
-		<!-- as many buttons as there are gamepads connected. 
-			update in the javascript section-- >
-	  </div>
-	</div>
-	<button id='default'>Default</button>
-</div> -->
-<br>
-<button id= "add gamepad" onclick="addGamepadDebug()">Add Gamepad</button>
-<button id= "remove gamepad">Remove Gamepad</button>
-<button id = "test response" onclick = "testResponse()">Test Response</button>
-<button id = "stop" onclick = "toggleAskUpdate()">STOP PERIF CHECK (debug)</button>
-
 <!--<button id="button3" style="display:none;" onclick="document.getElementById('button1').style.display = 'block'; this.style.display = 'none';">Button 3</button>-->
 
-<!--
 
-
-https://blog.hubspot.com/website/html-dropdown
-https://blog.hubspot.com/website/html-dropdown
-https://blog.hubspot.com/website/html-dropdown
-https://blog.hubspot.com/website/html-dropdown
-
-BETTER DROPDOWN MENU IMPLEMENTATION!!!
-BETTER MENU!!!
--->
 
 <p id = "para">My first paragraph.</p>
 <p id = "debugCodePromptInfo"></p>
-<br><br><br>
+<br>
 <p id = "messageBox"></p>
-
+<br><br><br><br>
+<button id = "debugMode" onclick="toggleDebug()">ToggleDebug</button>
 
 <script>
+function toggleDebug(){
+	var x = document.getElementById("debug");//.classList.toggle("show");
+	if (x.style.display === "none") {
+		x.style.display = "block";
+	} else {
+		x.style.display = "none";
+	}
+}
 
 
-
-function sendCode(){
-	var codeToSend = document.getElementById('code').value;
-	console.log(codeToSend);
-	document.getElementById('code').value = "";
+function sendPasscode(){
+	var passcodeToSend = document.getElementById('passcode').value;
+	console.log(passcodeToSend);
+	document.getElementById('passcode').value = "";
 	xmlhttp=new XMLHttpRequest();
 	xmlhttp.onreadystatechange = function() {
 		if (xmlhttp.readyState === 4) {
 			console.log(xmlhttp.response);
 		}
 	}
-	var message = "code=" + codeToSend;
+	var message = "passcode=" + passcodeToSend;
 	//xmlhttp.open("HEAD","/data?" + message,true);
-	xmlhttp.open("GET","/sendCode?" + message,true);
+	xmlhttp.open("GET","/sendPasscode?" + message,true);
 	xmlhttp.timeout = 600;
-	xmlhttp.ontimeout = function () { blah("sendCode");}//function () { alert("Timed out!!!");} //blah2();//blah("sendCode");
+	xmlhttp.ontimeout = function () { blah("sendPasscode");}//function () { alert("Timed out!!!");} //blah2();//blah("sendPasscode");
 	xmlhttp.send();
 }
 
@@ -209,98 +210,94 @@ function toggleAskUpdate(){
 }
 
 
-//requestAnimationFrame(testResponse);
+//requestAnimationFrame(getPeriphUpdates);
 
 const periphEnum = {3: "UV", 4: "Flashlight", 6: "Electromagnet"};
 const toggleEnum = {"-1": true, "0": false, "1": true, "2": false}; //true = toggled on, false = toggled off
 
 //var gamepadDebug = [];
-function testResponse(){
+function getPeriphUpdates(){
 	//console.log("testing");
 	xmlhttp=new XMLHttpRequest();
 	xmlhttp.onreadystatechange = function() {
 		if (xmlhttp.readyState === 4) {
-			
-			/*//callback(xmlhttp.response);
-			//console.log(xmlhttp.response);
-			//console.log(xmlhttp.responseXML);
-			//console.log(xmlhttp.responseType);
-			//console.log(xmlhttp.get_json(true));
-			//var data = xmlhttp.responseXML;
-			//parser = new DOMParser();
-			//xmlDoc = parser.parseFromString(xmlhttp.responseXML,"text/xml");
-			//console.log(xmlDoc);
-			
-			//document.getElementById("para").innerHTML = xmlhttp.responseText;
-			//console.log(xmlhttp.responseType);
-			//if(xmlhttp.responseType === "json"){
-				
-			*/	
-			
-			
-			var dict = JSON.parse(xmlhttp.response);
-			//console.log(dict);
-			var strin = "";//xmlhttp.responseText + "<br>";
-			
-			var message = dict["message"];
-			if (message != ""){
-				document.getElementById("messageBox").innerHTML = message;
+			var valid = false;
+			var dict;
+			if(xmlhttp.response) {
+				try {
+					dict = JSON.parse(xmlhttp.response);
+					valid = true;
+				} catch(e) {
+					valid = false;
+					//alert(e); // error in the above string (in this case, yes)!
+				}
 			}
+			if(valid){
 			
-			var prompt = dict["prompt"];
-			if (prompt != ""){
-				document.getElementById("debugCodePromptInfo").innerHTML = prompt;
-			}
+				var dict = JSON.parse(xmlhttp.response);
+				//console.log(dict);
+				var strin = "";//xmlhttp.responseText + "<br>";
 				
-			var periphs = dict["peripherals"];
-			
-			//console.log(periphs);
-			
-			for (var key of Object.keys(periphs)){
-				var periphName = periphEnum[parseInt(key)];
-				var toggleStatus = toggleEnum[periphs[key].toString()] ? "On" : "Off";
+				var message = dict["message"];
+				if (message != ""){
+					document.getElementById("messageBox").innerHTML = message;
+				}
+				
+				var prompt = dict["prompt"];
+				if (prompt != ""){
+					document.getElementById("debugCodePromptInfo").innerHTML = prompt;
+				}
+					
+				var periphs = dict["peripherals"];
+				
+				//console.log(periphs);
+				
+				for (var key of Object.keys(periphs)){
+					var periphName = periphEnum[parseInt(key)];
+					var toggleStatus = toggleEnum[periphs[key].toString()] ? "On" : "Off";
+					
+					
+					strin = strin + periphName + " is " + toggleStatus + ". ";
+				}
+				//use ButtonNum enum to tell what peripherals each is (using the key value),
+				//and use Toggle enum to tell whether a peripheral is off or on
+				//enums in javascript?? google.
+				/*
+					class Toggle(Enum):
+						TURN_OFF = -1 #is on, next press will turn off
+						OFF = 0 # is off
+						ON = 1 #is on
+						TURN_ON = 2 #is off, next press will turn on
+						
+					UVToggle = Toggle.OFF.value
+					flashlightToggle = Toggle.OFF.value
+					magnetToggle = Toggle.OFF.value
+					liftDir = LiftDirection.NONE.value
+					
+				   class ButtonNum(Enum):
+					UV  = 3
+					FLASH = 4
+					CENTER = 5
+					EM = 6
+					LIFT_UP = 7
+					LIFT_DOWN = 8
+				*/
 				
 				
-				strin = strin + periphName + " is " + toggleStatus + ". ";
-			}
-			//use ButtonNum enum to tell what peripherals each is (using the key value),
-			//and use Toggle enum to tell whether a peripheral is off or on
-			//enums in javascript?? google.
-			/*
+				document.getElementById("para").innerHTML = strin;
+				//xmlDoc.getElementsByTagName("title")[0].childNodes[0].nodeValue;
+				//document.getElementById("para").innerHTML = xmlhttp.responseText;
+				
+				
+				/*
 				class Toggle(Enum):
 					TURN_OFF = -1 #is on, next press will turn off
 					OFF = 0 # is off
 					ON = 1 #is on
 					TURN_ON = 2 #is off, next press will turn on
-					
-				UVToggle = Toggle.OFF.value
-				flashlightToggle = Toggle.OFF.value
-				magnetToggle = Toggle.OFF.value
-				liftDir = LiftDirection.NONE.value
-				
-			   class ButtonNum(Enum):
-				UV  = 3
-				FLASH = 4
-				CENTER = 5
-				EM = 6
-				LIFT_UP = 7
-				LIFT_DOWN = 8
-			*/
-			
-			
-			document.getElementById("para").innerHTML = strin;
-			//xmlDoc.getElementsByTagName("title")[0].childNodes[0].nodeValue;
-			//document.getElementById("para").innerHTML = xmlhttp.responseText;
-			
-			
-			/*
-			class Toggle(Enum):
-				TURN_OFF = -1 #is on, next press will turn off
-				OFF = 0 # is off
-				ON = 1 #is on
-				TURN_ON = 2 #is off, next press will turn on
-			*/
-			//}
+				*/
+				//}
+			}
 		
 		}
 	}
@@ -356,13 +353,13 @@ function configure(){
 	
 }
 
-function toggleName(){
-	var but = document.getElementById("button1");
+function toggleText(id, text1, text2){
+	var but = document.getElementById(id);
 	
-	if (but.innerText === "Configure Gamepads") {
-		but.innerText = "Cancel";
-    }else {
-		but.innerText = "Configure Gamepads";
+	if (but.innerText === text1){//"Configure Gamepads") {
+		but.innerText = text2;//"Cancel";
+    }else if (but.innerText == text2){
+		but.innerText = text1;//"Configure Gamepads";
 	}
 }
 
@@ -526,7 +523,7 @@ function updateStatus() {
   }
   if(updateCount>updateMax){
 	updateCount = 0;
-	testResponse();
+	getPeriphUpdates();
   }
 
   if (!haveEvents) {

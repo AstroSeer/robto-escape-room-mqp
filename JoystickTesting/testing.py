@@ -7,7 +7,7 @@
 # tutorial url: https://osoyoo.com/?p=32066
 
 
-#testt\Scripts\activate.bat
+#testt\Scripts\activate.bat #--- just a note for testing purposes
 
 from __future__ import division
 import time
@@ -29,6 +29,22 @@ pi_ip_address='localhost'#'130.215.9.186' #'0.0.0.0'#'192.168.0.32' # replace 19
 #pwm = Adafruit_PCA9685.PCA9685() #--- add back in
 #pwm.set_pwm_freq(60)#--- add back in
 
+"""
+START MQTT STUFF #--- add back in, block uncomment below
+"""
+# def on_connect(client, userdata, flags, rc):
+    # print(f"Connected with result code {rc}")
+    # client.subscribe("esp32/state")
+    
+# def on_message(client, userdata, msg):
+    # print("Message Received: " + msg.topic + " " + str(msg.payload))
+
+# client = mqtt.Client()
+# client.on_connect = on_connect
+# client.on_message = on_message
+#--- add back in, block uncomment above
+
+
 #import os     #importing os library so as to communicate with the system #--- add back in
 #os.system ("sudo pigpiod") #Launching GPIO library #--- add back in
 #time.sleep(1) # As i said it is too impatient and so if this delay is removed you will get an error #--- add back in
@@ -38,7 +54,7 @@ pi_ip_address='localhost'#'130.215.9.186' #'0.0.0.0'#'192.168.0.32' # replace 19
 #make it so that if it has not recieved anything from the html for a while,
     #it stops moving
 
-usingCam = False #only for testing
+usingCam = False #--- only for testing
 class CamDirection(Enum):
     NONE = 0
     RIGHT = 1
@@ -95,9 +111,8 @@ if(usingCam):    #--- only for testing
 #IN4 = 22 #--- add back in
 #ENA = 0  #Right motor speed PCA9685 port 0 #--- add back in
 #ENB = 1  #Left motor speed PCA9685 port 1 #--- add back in
-#move_speed = 1200 #1800  # Max pulse length out of 4096 #--- add back in
-#TODO: adjust speed value, make slower so robot moves slower
-#turn_speed = 1000 #1500 #--- add back in
+#move_speed = 1350 #1800  # Max pulse length out of 4096 #--- add back in
+#turn_speed = 1300 #1500 #--- add back in
 
 servo_ctr = 320 #ultrasonic sensor facing front
 
@@ -114,7 +129,8 @@ maxRight = 120
 maxLeft = 550
 maxUp = 190
 maxDown = 424
-step = 3#20 #how far camera servos move in one step
+step = 3#20 #how far camera servos move in one step 
+#TODO: test lowering step value, or maybe stepping less often
 
 #initialize GPIO status variables
 #IN1Sts = 0 #--- add back in
@@ -156,7 +172,7 @@ bottomLimitPin = 6
 def changespeed(speed):
     print("changeSpeed") #--- only for testing
     #pwm.set_pwm(ENB, 0, speed) #--- add back in
-    #pwm.set_pwm(ENA, 0, int(speed*.95)) #--- add back in
+    #pwm.set_pwm(ENA, 0, speed)#int(speed*.95)) #--- add back in
 
 def stopcar():
     #print("stopping car")
@@ -371,7 +387,7 @@ def update(dt):
         centerCam()
     else:
         turnCam()
-        
+    #TODO: use button enums for the following, rather than hardcoded numbers
         # Checks UV Flashlight
     if(UVToggle == Toggle.TURN_ON.value and buttonVals[3]==1):
         uvFlashlight(1)
@@ -384,8 +400,6 @@ def update(dt):
         UVToggle = Toggle.OFF.value
     elif(UVToggle == Toggle.OFF.value and buttonVals[3]==0):
         UVToggle = Toggle.TURN_ON.value
-   
-    
     
     # Checks flashlight
     if(flashlightToggle == Toggle.TURN_ON.value and buttonVals[4]==1):
@@ -426,60 +440,39 @@ def update(dt):
             
 app = Flask(__name__, static_url_path='')
 
-countDebug = 0;
 
 @app.route("/")
 def hello():
-    global countDebug
-    print(countDebug)
-    countDebug = countDebug+1;
-    
-    text = "<bookstore><book>" + "<title>Everyday Italian</title>" + "<author>Giada De Laurentiis</author>" + "<year>2005</year>" +"</book></bookstore>";
-    # data = [
-        # {
-            # 'name':'Audrin',
-            # 'place': 'kaka',
-            # 'mob': '7736'
-        # },
-        # {
-            # 'name': 'Stuvard',
-            # 'place': 'Goa',
-            # 'mob' : countDebug
-        # }
-    # ]
-    data = text
     return render_template('testing.html',)# data=data, mimetype='text/xml');
    
    
    
    
-  
    
    
-   
-promptingForCode = False;
-currentCode = 0;
+promptingForPasscode = False;
+currentPasscode = 0;
 
-codeList = ["9435", "blah"];
+passcodeList = ["9435", "blah"];
    
 from flask import Response
 import json
 
-@app.route("/sendCode")
-def recieveCode(): 
-    codeInput = request.args.get('code');
-    print(codeInput);
+@app.route("/sendPasscode")
+def recievePasscode(): 
+    passcodeInput = request.args.get('passcode');
+    print(passcodeInput);
     data = [0,0];
     
-    if(promptingForCode):
-        data[0] = 1;#looking for code
+    if(promptingForPasscode):
+        data[0] = 1;#looking for passcode
     else:
-        data[0] = 0;#not looking for code
+        data[0] = 0;#not looking for passcode
         
-    if(codeInput == codeList[currentCode]):
-        data[1] = 1; #correct code
+    if(passcodeInput == passcodeList[currentPasscode]):
+        data[1] = 1; #correct passcode
     else:
-        data[1] = 0; #incorrect code
+        data[1] = 0; #incorrect passcode
     return Response(json.dumps(data), mimetype = 'text/xml')
     
      
@@ -529,10 +522,10 @@ def responding():
             {ButtonNum.UV.value: UVToggle, \
             ButtonNum.FLASH.value: flashlightToggle, \
             ButtonNum.EM.value: magnetToggle},\
-        "prompt": "",\
+        "prompt": promptingForPasscode,\
         "message": ""} 
         
-        #"prompt", prompting for a code input 
+        #"prompt", prompting for a passcode input 
         #"message", a message to the player to be displayed onscreen
     #print(data)
 
@@ -600,19 +593,7 @@ def recieve1():#buttonvals,moveAxesVal,camAxesVals):
     for i in range(9):
         prevButtons[i] = buttonVals[i]
     
-    # data = [
-        # {
-            # 'name':'Audrin',
-            # 'place': 'kaka',
-            # 'mob': '7736'
-        # },
-        # {
-            # 'name': 'Stuvard',
-            # 'place': 'Goa',
-            # 'mob' : '546464'
-        # }
-    # ]
-    return render_template('testing.html')#, data=data)
+    return render_template('testing.html')
     
 @app.route("/<buttonvals>/<moveAxesVal>/<camAxesVals>")
 def recieve(buttonvals,moveAxesVal,camAxesVals):
@@ -643,7 +624,6 @@ def video_feed():
     else:#--- only for testing
         return#--- only for testing
     #return Response#cam.start(), mimetype='multipart/x-mixed-replace; boundary=frame') #--- add back in
-        
         
 class MyThread(threading.Thread):
     def __init__(self, event):
