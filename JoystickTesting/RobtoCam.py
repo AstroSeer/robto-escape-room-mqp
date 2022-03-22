@@ -5,7 +5,7 @@
 #   it is instantiate it and call the start() method.
 from flask import Flask, render_template, Response
 
-
+from paho.mqtt import client
 from picamera.array import PiRGBArray  #--- add back in
 from picamera import PiCamera as pc #--- add back in 
 import time
@@ -20,9 +20,9 @@ class Camera:
         self.video = cv2.VideoCapture(0) #--- add back in
         #self.video = cv2.VideoCapture(2, cv2.CAP_DSHOW) #only for testing
         # video.set(cv2.CAP_PROP_FPS, 70) #sets FPS
-        # video.set(3, 640) #sets first resolution
-        # video.set(4, 480) #sets second resolution
-        self.video.set(cv2.CAP_PROP_BUFFERSIZE, 5)
+        self.video.set(3, 768) #sets first resolution
+        self.video.set(4, 432) #sets second resolution
+        self.video.set(cv2.CAP_PROP_BUFFERSIZE, 1)
         
         if not self.video.isOpened():
             print("cannot open video")
@@ -31,7 +31,7 @@ class Camera:
     def rescale(self, image, percent):
         width = int(image.shape[1] * percent/100)
         height = int(image.shape[0] * percent/100)
-        dim= (width, height)
+        dim = (width, height)
         return cv2.resize(image, dim, interpolation=cv2.INTER_AREA)
 
     def start(self):
@@ -63,7 +63,7 @@ class Camera:
             #displays frame
             #cv2.imshow("Frame", rotated_img)
             #saves frame
-        #     cv2.imwrite("led_test.jpg", rotated_img)
+            #cv2.imwrite("led_test.jpg", rotated_img)
             success, buffer = cv2.imencode('.jpg', rotated_img)
             fram = buffer.tobytes()
             yield (b'--frame\r\n'

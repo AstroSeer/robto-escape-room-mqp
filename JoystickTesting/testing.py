@@ -111,8 +111,8 @@ if(usingCam):    #--- only for testing
 #IN4 = 22 #--- add back in
 #ENA = 0  #Right motor speed PCA9685 port 0 #--- add back in
 #ENB = 1  #Left motor speed PCA9685 port 1 #--- add back in
-#move_speed = 1350 #1800  # Max pulse length out of 4096 #--- add back in
-#turn_speed = 1300 #1500 #--- add back in
+move_speed = 1350  # Max pulse length out of 4096 #--- add back in
+turn_speed = 1300 #--- add back in
 
 servo_ctr = 320 #ultrasonic sensor facing front
 
@@ -280,8 +280,10 @@ def checkLiftLimits():
     return #--- only for testing
     #pseudocode for how we can restrict user from abusing lift
     if(GPIO.input(topLimitPin) == 0):
+#         print("top switch hit")
         liftDir = LiftDirection.UP.value
     elif(GPIO.input(bottomLimitPin) == 0):
+#         print("bottom switch hit")
         liftDir = LiftDirection.DOWN.value
 
 def whiteFlashlight(status):
