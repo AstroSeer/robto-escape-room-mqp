@@ -6,6 +6,9 @@
 # Osoyoo Raspberry Pi Web Camera Control Robot Car
 # tutorial url: https://osoyoo.com/?p=32066
 
+
+
+
 from __future__ import division
 import time
 import flask
@@ -26,7 +29,7 @@ pwm = Adafruit_PCA9685.PCA9685() #--- add back in
 pwm.set_pwm_freq(60)#--- add back in
 
 """
-START MQTT STUFF
+START MQTT STUFF #--- add back in, block uncomment below
 """
 def on_connect(client, userdata, flags, rc):
     print(f"Connected with result code {rc}")
@@ -42,7 +45,6 @@ client.connect(pi_ip_address)
 client.subscribe("esp32/state", 0)
 client.publish("rpi/passcode", 0)
 
-
 import os     #importing os library so as to communicate with the system
 os.system ("sudo pigpiod") #Launching GPIO library
 time.sleep(1) # As i said it is too impatient and so if this delay is removed you will get an error
@@ -51,7 +53,8 @@ import pigpio #importing GPIO library
 #TODO
 #make it so that if it has not recieved anything from the html for a while, 
     #it stops moving
-   
+
+#usingCam = False #--- only for testing
 class CamDirection(Enum):
     NONE = 0
     RIGHT = 1
@@ -76,17 +79,20 @@ class Button(Enum):
     ON = 1
 
 class Toggle(Enum):
-    TURN_OFF = -1
-    OFF = 0
-    ON = 1
-    TURN_ON = 2
+    TURN_OFF = -1 #is on, next press will turn off
+    OFF = 0 # is off
+    ON = 1 #is on
+    TURN_ON = 2 #is off, next press will turn on
     
 class LiftDirection(Enum):
     DOWN = -1
     NONE = 0
     UP = 1
-
-cam = RobtoCam.Camera()
+# if(usingCam):    #--- only for testing
+    # cam = RobtoCamTest.Camera() #--- only for testing
+    
+    
+cam = RobtoCam.Camera() #--- add back in
 #with this variable cam, can access the object's properties
 #in order to get the information from the vision processing code
 
@@ -123,7 +129,8 @@ maxRight = 120
 maxLeft = 550
 maxUp = 210
 maxDown = 500
-step = 3#20 #how far camera servos move in one step
+step = 3#20 #how far camera servos move in one step 
+#TODO: test lowering step value, or maybe stepping less often
 
 #initialize GPIO status variables
 IN1Sts = 0 #--- add back in
@@ -145,7 +152,8 @@ lightPin = 25
 UVPin = 3
 whitePin = 2
 magnetPin = 4
-GPIO.setup(lightPin, GPIO.IN)
+GPIO.setup(lightPin, GPIO.IN) #--- add back in
+
 # For Lift
 ESC=13  #Connect the ESC in this GPIO pin 
 speed = 150#TODO: adjust speed value, make slower so robot moves slower
@@ -153,22 +161,18 @@ stop = 1500
 
 topLimitPin = 5
 bottomLimitPin = 6
-GPIO.setup(topLimitPin, GPIO.IN)
-GPIO.setup(bottomLimitPin, GPIO.IN)
+GPIO.setup(topLimitPin, GPIO.IN) #--- add back in
+GPIO.setup(bottomLimitPin, GPIO.IN) #--- add back in
 
-pi = pigpio.pi();
-time.sleep(1)
-pi.set_servo_pulsewidth(ESC, stop)
+pi = pigpio.pi(); #--- add back in
+time.sleep(1) #--- add back in
+pi.set_servo_pulsewidth(ESC, stop) #--- add back in
         
         
 def changespeed(speed):
     #print("changeSpeed") #--- only for testing
     pwm.set_pwm(ENB, 0, speed) #--- add back in
-    pwm.set_pwm(ENA, 0, speed) #--- add back in
-#     pwm.set_pwm(ENA, 0, int(speed*.95)) #--- add back in
-
-
-
+    pwm.set_pwm(ENA, 0, speed)#int(speed*.95)) #--- add back in
 
 def stopcar():
     #print("stopping car")
@@ -258,6 +262,7 @@ def centerCam():
     
 def moveLift():
     global liftDir, buttonVals
+    #return #--- only for testing
     checkLiftLimits()
     if(liftDir != LiftDirection.UP.value and buttonVals[7]==1):
         pi.set_servo_pulsewidth(ESC, stop-speed)
@@ -272,6 +277,7 @@ def moveLift():
         
 def checkLiftLimits():
     global liftDir
+    #return #--- only for testing
     #pseudocode for how we can restrict user from abusing lift
     if(GPIO.input(topLimitPin) == 0):
 #         print("top switch hit")
@@ -280,8 +286,8 @@ def checkLiftLimits():
 #         print("bottom switch hit")
         liftDir = LiftDirection.DOWN.value
     
-
 def whiteFlashlight(status):
+    #return #--- only for testing
     if(status):
         pwm.set_pwm(whitePin, 0, 4000)
     else:
@@ -289,6 +295,7 @@ def whiteFlashlight(status):
     pwm.set_pwm(UVPin, 0, 0)
     
 def uvFlashlight(status):
+    #return #--- only for testing
     if(status):
         pwm.set_pwm(UVPin, 0, 4000)    #switch leds on and off
     else:
@@ -296,6 +303,7 @@ def uvFlashlight(status):
     pwm.set_pwm(whitePin, 0, 0)
 
 def magnet(status):
+    #return #--- only for testing
     if(status):
         pwm.set_pwm(magnetPin, 0, 4000)    #switch EM on and off
     else:
@@ -303,8 +311,8 @@ def magnet(status):
 
 #initialize robot
 stopcar()
-pwm.set_pwm(LRcam_servo, 0, servo_ctr)#--- add back in
-pwm.set_pwm(UDcam_servo, 0, servo_ctr)#--- add back in
+pwm.set_pwm(LRcam_servo, 0, servo_ctr) #--- add back in
+pwm.set_pwm(UDcam_servo, 0, servo_ctr) #--- add back in
 time.sleep(2)
 
 running = True
@@ -325,7 +333,15 @@ buttonVals = [0,0,0,0,0,0,0,0,0]
 #6: Electromagnet toggle
 #7: Lift up
 #8: Lift down
-
+class ButtonNum(Enum):
+    UV  = 3
+    FLASH = 4
+    CENTER = 5
+    EM = 6
+    LIFT_UP = 7
+    LIFT_DOWN = 8
+#TODO: use ButtonNum.[button wanted].value instead of hard coded numbers!
+    #so that if buttons change order, only have to change the code in this enum and nowhere else!!
 
 prevButtons = [0,0,0,0,0,0,0,0,0]
 prevButtonState = [0,0,0,0,0,0,0,0,0]
@@ -333,6 +349,9 @@ UVToggle = Toggle.OFF.value
 flashlightToggle = Toggle.OFF.value
 magnetToggle = Toggle.OFF.value
 liftDir = LiftDirection.NONE.value
+peripheralUpdates = True;
+#waitingForUpdates = False;
+
 def update(dt):
     #TODO: prevent race conditions with Flask app changing values of buttons and axes?? 
     #maybe just set local variables equal to what the values were at the beginning of update?
@@ -376,7 +395,7 @@ def update(dt):
         turnCam()
     
 #     cam.set_terminal("default")
-    
+    #TODO: use button enums for the following, rather than hardcoded numbers 
      # Checks UV Flashlight
     if(UVToggle == Toggle.TURN_ON.value and buttonVals[3]==1):
         uvFlashlight(1)
@@ -434,7 +453,104 @@ app = Flask(__name__, static_url_path='')
 def hello():
    return render_template('testing.html')
 
+promptingForPasscode = False;
+currentPasscode = 0;
 
+passcodeList = ["9435", "blah"];
+   
+from flask import Response
+import json
+
+@app.route("/sendPasscode")
+def recievePasscode(): 
+    passcodeInput = request.args.get('passcode');
+    print(passcodeInput);
+    data = [0,0];
+    
+    if(promptingForPasscode):
+        data[0] = 1;#looking for passcode
+    else:
+        data[0] = 0;#not looking for passcode
+        
+    if(passcodeInput == passcodeList[currentPasscode]):
+        data[1] = 1; #correct passcode
+    else:
+        data[1] = 0; #incorrect passcode
+    return Response(json.dumps(data), mimetype = 'text/xml')
+    
+     
+     
+   #for peripheral continuous upates
+   
+   #Options other than SSE:
+   #https://nitin15j.medium.com/push-over-http-ba42f2e1bdfc
+   
+   
+   #https://maxhalford.github.io/blog/flask-sse-no-deps/
+   #SERVER-SENT EVENT!! MAKE HTML LISTEN FOR UPDATES FROM FLASK!
+   #PREVENT LAG AND TIMEOUTS FROM CONSTANT XML REQUESTS
+   # import queue
+
+    # class MessageAnnouncer:
+
+        # def __init__(self):
+            # self.listeners = []
+
+        # def listen(self):
+            # q = queue.Queue(maxsize=5)
+            # self.listeners.append(q)
+            # return q
+
+        # def announce(self, msg):
+            # for i in reversed(range(len(self.listeners))):
+                # try:
+                    # self.listeners[i].put_nowait(msg)
+                # except queue.Full:
+                    # del self.listeners[i]
+@app.route("/ask")
+def responding(): 
+    #global countDebug
+    #print(countDebug)
+    #countDebug = countDebug+1;
+    
+    #text = "<bookstore><book>" + "<title>Everyday Italian</title>" + "<author>Giada De Laurentiis</author>" + "<year>2005</year>" +"</book></bookstore>";
+    
+    # if(waitingForUpdates):
+        
+    # while(!peripheralUpdates):
+        # waitingForUpdates = True;
+    # waitingForUpdates = False;
+    
+    data ={"peripherals": \
+            {ButtonNum.UV.value: UVToggle, \
+            ButtonNum.FLASH.value: flashlightToggle, \
+            ButtonNum.EM.value: magnetToggle},\
+        "prompt": promptingForPasscode,\
+        "message": ""} 
+        
+        #"prompt", prompting for a passcode input 
+        #"message", a message to the player to be displayed onscreen
+    #print(data)
+
+    #d['fish'] = 'wet'     # Set an entry in a dictionary
+    #print(d['fish'])      # Prints "wet"
+    
+    #return render_template('testing.html', data=data, mimetype='text/xml');
+    return Response(json.dumps(data), mimetype = 'application/json')#Response(data);#, mimetype='text/xml');
+   
+    # UVToggle = Toggle.OFF.value
+    # flashlightToggle = Toggle.OFF.value
+    # magnetToggle = Toggle.OFF.value
+    # liftDir = LiftDirection.NONE.value
+   # class ButtonNum(Enum):
+    # UV  = 3
+    # FLASH = 4
+    # CENTER = 5
+    # EM = 6
+    # LIFT_UP = 7
+    # LIFT_DOWN = 8
+    
+    
 @app.route("/data")
 def recieve1(): #buttonvals,moveAxesVal,camAxesVals):
     global carDir, camDirX, camDirY, buttonVals, prevButtonState, prevButtons, UVToggle, magnetToggle, flashlightToggle, center_cam
@@ -492,10 +608,12 @@ def recieve(buttonvals,moveAxesVal,camAxesVals):
 @app.route('/video_feed')
 def video_feed():
     #Video streaming route. Put this in the src attribute of an img tag
-    return Response(cam.start(), mimetype='multipart/x-mixed-replace; boundary=frame')
+    if(usingCam):#--- only for testing
+        return Response(cam.start(), mimetype='multipart/x-mixed-replace; boundary=frame')#--- only for testing
+    else:#--- only for testing
+        return#--- only for testing
+    #return Response#cam.start(), mimetype='multipart/x-mixed-replace; boundary=frame') #--- add back in
         
-        
-    
 class MyThread(threading.Thread):
     def __init__(self, event):
         global count
@@ -511,7 +629,12 @@ class MyThread(threading.Thread):
             old_time = time.time()
             
 
-
+def cleanup():
+    print("ending")
+    pwm.set_pwm(LRcam_servo, 0, servo_ctr)
+    pwm.set_pwm(UDcam_servo, 0, servo_ctr)
+    GPIO.cleanup()
+    
 # def closeThreads():
     # global stopFlag
     # print("closing time")
@@ -529,11 +652,6 @@ if __name__ == "__main__":
     finally:
         cleanup()
  
-def cleanup():
-#     print("ending")
-    pwm.set_pwm(LRcam_servo, 0, servo_ctr)
-    pwm.set_pwm(UDcam_servo, 0, servo_ctr)
-    GPIO.cleanup()
 
 #In the code that started the timer, you can then set the stopped event to stop the timer.
 

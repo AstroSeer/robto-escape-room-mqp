@@ -5,9 +5,9 @@
 #   it is instantiate it and call the start() method.
 from flask import Flask, render_template, Response
 
-
-from picamera.array import PiRGBArray
-from picamera import PiCamera as pc
+# from paho.mqtt import client #--- add back in
+# from picamera.array import PiRGBArray  #--- add back in
+# from picamera import PiCamera as pc #--- add back in 
 import time
 import cv2
 import numpy as np
@@ -19,11 +19,10 @@ class Camera:
     def __init__(self):
         self.video = cv2.VideoCapture(0)
 #         self.video = cv2.VideoCapture(2, cv2.CAP_DSHOW) #only for testing
-        
         # video.set(cv2.CAP_PROP_FPS, 70) #sets FPS
-        # video.set(3, 640) #sets first resolution
-        # video.set(4, 480) #sets second resolution
-        self.video.set(cv2.CAP_PROP_BUFFERSIZE, 5)
+        self.video.set(3, 426) #sets first resolution
+        self.video.set(4, 240) #sets second resolution
+        self.video.set(cv2.CAP_PROP_BUFFERSIZE, 1)
         
         if not self.video.isOpened():
             print("cannot open video")
@@ -56,7 +55,11 @@ class Camera:
             #draws markers on camera
             rotated_img = cv2.aruco.drawDetectedMarkers(rotated_img, markerCorners, markerIds)           
             #makes image bigger
-            rotated_img = self.rescale(rotated_img, 150)          
+            
+            #rotated_img = self.rescale(rotated_img, 150) #increasing size makes camera feed slow down on html
+            #rotated_img = self.rescale(rotated_img, 80) 
+            rotated_img = self.rescale(rotated_img, 70) #might not need to reduce size?
+                  
             #displays frame
             cv2.imshow("Frame", rotated_img)
             #saves frame
@@ -83,5 +86,5 @@ class Camera:
 
 
     
-c = Camera()
-c.start()
+#c = Camera()
+#c.start()

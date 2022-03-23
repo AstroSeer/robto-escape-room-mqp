@@ -1,10 +1,57 @@
 <!DOCTYPE html>
 <html>
+<style>
+label {
+  color: white;
+  padding: 4px;
+}
+ul {
+	color:white;
+}
+
+.dropbtn {
+  background-color: #3498DB;
+  color: white;
+  padding: 16px;
+  font-size: 16px;
+  border: none;
+  cursor: pointer;
+}
+
+.dropbtn:hover, .dropbtn:focus {
+  background-color: #2980B9;
+}
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #f1f1f1;
+  min-width: 160px;
+  overflow: auto;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+
+.dropdown-content a {
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+}
+
+.dropdown a:hover {background-color: #ddd;}
+.show {display:block;}
+</style>
 <head>
 <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-	<link rel="stylesheet" type="text/css" href="{{url_for('static',filename='styles/style.css')}}">
+	<link rel="stylesheet" type="text/css" href= "{{ url_for('static',filename='styles/style.css') }}"><!--"style.css">-->
 
 <title>Robot Escape Room MQP</title>
 </head>
@@ -23,9 +70,107 @@
       }*/
 
     </script> -->
+
 <label for="Timer">60:00</label>
 <h1>Escape with Robto</h1>
 <p id="demo"></p>
+
+
+<!--<h1>My First Heading</h1>
+<p>My first paragraph.</p>
+<p id="demo"></p>->
+<!--<button class = "Config" onclick="alert('You pressed the button!')">Configure Gamepads</button>-->
+
+
+<label for="passcode">Input Code:</label>
+<input type="text" id="passcode" maxlength="50" name="code">
+<button id ="submitPasscode" onclick = "sendPasscode();">Submit</button><br><br>
+
+<div id = "debug" style = "display:none;">
+	<button id="button1" style="display:block;" onclick="toggleText('button1', 'Configure Gamepads', 'Cancel'); toggleElement('configuration menu'); closeDropdown(); ">Configure Gamepads</button><!-- document.getElementById('button3').style.display = 'block';this.style.display = 'none';-->
+
+
+	<div id = "configuration menu" style = "display:none;">
+		<label for="gamepadType">Gamepad Type</label>
+		<select name="gamepadType" id="gamepadType" onchange = "configure()">
+			<option value="None">None</option>
+			<option value="Cont">Game Controller</option>
+			<option value="Phys">Physical Interface</option>
+		</select>
+
+
+		<div id = "gamepad1 select">
+			<label for="gamepad1">Gamepad 1</label>
+			<select name="gamepad1" id="gamepad1">
+				<option value="None">None</option>
+				<option value="rigatoni">Rigatoni</option>
+				<option value="dave">Dave</option>
+				<option value="pumpernickel">Pumpernickel</option>
+				<option value="reeses">Reeses</option>
+			</select>
+		</div>
+		
+		<div id = "gamepad2 select" style = "display:none;">
+			<label for="gamepad2">Gamepad 2</label>
+			<select name="gamepad2" id="gamepad2">
+				<option value="None">None</option>
+				<option value="rigatoni">Rigatoni</option>
+				<option value="dave">Dave</option>
+				<option value="pumpernickel">Pumpernickel</option>
+				<option value="reeses">Reeses</option>
+			</select>
+		</div>
+		<button id='update' onclick="toggleText('button1', 'Configure Gamepads', 'Cancel'); toggleElement('configuration menu'); closeDropdown(); ">Update Configuration</button>
+		<button id='default'>Default</button>
+	</div>
+
+	<!--<div id = "configuration menu" style = "display:none;">
+		
+		<div class="dropdown" > <!-- select gamepad type-- >
+		  <button id = "GamepadType" class="dropbtn">Gamepad Type</button> <!--onclick="dropdownToggle('GamepadTypeDropdown')" -- >
+		  <div id="GamepadTypeDropdown" class="dropdown-content">
+			<button onclick="configure('controller')" id = "Cont">Game Controller</button>
+			<button onclick="configure('interface')" id = "Phys">Physical Interface</button>
+		  </div>
+		</div>
+
+		<div class="dropdown" <!--id = "GamepadDrop1">--> <!-- select gamepad 1-- >
+		  <button style="display:none;" id = "Gamepad1" class="dropbtn">Gamepad 1</button>
+		  <div id="Gamepad1Dropdown" class="dropdown-content">
+			<button id = "None1">None</button>
+			<!-- as many buttons as there are gamepads connected. 
+				update in the javascript section-- >
+		  
+		  </div>
+		</div>
+
+		<div class="dropdown" <!--id = "GamepadDrop2"> --><!-- select gamepad 2 -- >
+		  <button style="display:none;" id = "Gamepad2" class="dropbtn">Gamepad 2</button>
+		  <div id="Gamepad2Dropdown" class="dropdown-content">
+			<button id = "None2">None</button>
+			<!-- as many buttons as there are gamepads connected. 
+				update in the javascript section-- >
+		  </div>
+		</div>
+		<button id='default'>Default</button>
+	</div> -->
+	<br>
+	<button id= "add gamepad" onclick="addGamepadDebug()">Add Gamepad</button>
+	<button id= "remove gamepad">Remove Gamepad</button>
+	<button id = "test response" onclick = "getPeriphUpdates()">Check Peripherals (debug)</button>
+	<label for="periphCheckToggle">Toggle Peripheral Check (debug)</label>
+	<button id = "periphChecktoggle" onclick = "toggleText('periphChecktoggle', 'Turn On', 'Turn Off'); toggleAskUpdate()">Turn Off</button>
+</div>
+<!--<button id="button3" style="display:none;" onclick="document.getElementById('button1').style.display = 'block'; this.style.display = 'none';">Button 3</button>-->
+
+
+
+<p id = "para">My first paragraph.</p>
+<p id = "debugCodePromptInfo"></p>
+<br>
+<p id = "messageBox"></p>
+<br><br><br><br>
+<button id = "debugMode" onclick="toggleDebug()">ToggleDebug</button>
 
 <div class="container">
     <div class="row">
@@ -37,7 +182,248 @@
 
 <p>Hints:</p>
 <script>
-document.getElementById("demo").innerHTML = "Hello JavaScript!";
+function toggleDebug(){
+	var x = document.getElementById("debug");//.classList.toggle("show");
+	if (x.style.display === "none") {
+		x.style.display = "block";
+	} else {
+		x.style.display = "none";
+	}
+}
+
+
+function sendPasscode(){
+	var passcodeToSend = document.getElementById('passcode').value;
+	console.log(passcodeToSend);
+	document.getElementById('passcode').value = "";
+	xmlhttp=new XMLHttpRequest();
+	xmlhttp.onreadystatechange = function() {
+		if (xmlhttp.readyState === 4) {
+			console.log(xmlhttp.response);
+		}
+	}
+	var message = "passcode=" + passcodeToSend;
+	//xmlhttp.open("HEAD","/data?" + message,true);
+	xmlhttp.open("GET","/sendPasscode?" + message,true);
+	xmlhttp.timeout = 600;
+	xmlhttp.ontimeout = function () { blah("sendPasscode");}//function () { alert("Timed out!!!");} //blah2();//blah("sendPasscode");
+	xmlhttp.send();
+}
+
+
+var updateStopped = false;
+
+function toggleAskUpdate(){
+	updateStopped = !updateStopped;
+}
+
+
+//requestAnimationFrame(getPeriphUpdates);
+
+const periphEnum = {3: "UV", 4: "Flashlight", 6: "Electromagnet"};
+const toggleEnum = {"-1": true, "0": false, "1": true, "2": false}; //true = toggled on, false = toggled off
+
+//var gamepadDebug = [];
+function getPeriphUpdates(){
+	//console.log("testing");
+	xmlhttp=new XMLHttpRequest();
+	xmlhttp.onreadystatechange = function() {
+		if (xmlhttp.readyState === 4) {
+			var valid = false;
+			var dict;
+			if(xmlhttp.response) {
+				try {
+					dict = JSON.parse(xmlhttp.response);
+					valid = true;
+				} catch(e) {
+					valid = false;
+					//alert(e); // error in the above string (in this case, yes)!
+				}
+			}
+			if(valid){
+			
+				var dict = JSON.parse(xmlhttp.response);
+				//console.log(dict);
+				var strin = "";//xmlhttp.responseText + "<br>";
+				
+				var message = dict["message"];
+				if (message != ""){
+					document.getElementById("messageBox").innerHTML = message;
+				}
+				
+				var prompt = dict["prompt"];
+				if (prompt != ""){
+					document.getElementById("debugCodePromptInfo").innerHTML = prompt;
+				}
+					
+				var periphs = dict["peripherals"];
+				
+				//console.log(periphs);
+				
+				for (var key of Object.keys(periphs)){
+					var periphName = periphEnum[parseInt(key)];
+					var toggleStatus = toggleEnum[periphs[key].toString()] ? "On" : "Off";
+					
+					
+					strin = strin + periphName + " is " + toggleStatus + ". ";
+				}
+				//use ButtonNum enum to tell what peripherals each is (using the key value),
+				//and use Toggle enum to tell whether a peripheral is off or on
+				//enums in javascript?? google.
+				/*
+					class Toggle(Enum):
+						TURN_OFF = -1 #is on, next press will turn off
+						OFF = 0 # is off
+						ON = 1 #is on
+						TURN_ON = 2 #is off, next press will turn on
+						
+					UVToggle = Toggle.OFF.value
+					flashlightToggle = Toggle.OFF.value
+					magnetToggle = Toggle.OFF.value
+					liftDir = LiftDirection.NONE.value
+					
+				   class ButtonNum(Enum):
+					UV  = 3
+					FLASH = 4
+					CENTER = 5
+					EM = 6
+					LIFT_UP = 7
+					LIFT_DOWN = 8
+				*/
+				
+				
+				document.getElementById("para").innerHTML = strin;
+				//xmlDoc.getElementsByTagName("title")[0].childNodes[0].nodeValue;
+				//document.getElementById("para").innerHTML = xmlhttp.responseText;
+				
+				
+				/*
+				class Toggle(Enum):
+					TURN_OFF = -1 #is on, next press will turn off
+					OFF = 0 # is off
+					ON = 1 #is on
+					TURN_ON = 2 #is off, next press will turn on
+				*/
+				//}
+			}
+		
+		}
+	}
+	
+	xmlhttp.open("GET","/ask",true);
+	xmlhttp.timeout = 600;
+	xmlhttp.ontimeout =function () { blah("ask");} // blah("ask");
+	xmlhttp.send();
+}
+
+
+
+
+
+
+
+function addGamepadDebug(){
+  closeDropdown();
+  var drops = [document.getElementById("Gamepad1Dropdown"), document.getElementById("Gamepad2Dropdown")];
+  var num = 0;
+  while(num < 2){
+	var drop = drops[num];
+	var gamepadBut = document.createElement("button");
+	gamepadBut.setAttribute("id", "gamepad");
+	gamepadBut.innerText = "Gamepad Description";
+	drop.appendChild(gamepadBut);
+	num = num+1;
+  }
+}
+
+function removeGamepadDebug(num){
+	//random num?
+}
+
+function configure(){
+
+
+	
+	var type = document.getElementById('gamepadType').value;
+	//document.getElementById('GamepadType').value = "";
+	//closeDropdown();
+	if(type === 'Cont'){//gamepadtype === 'controller'){
+		//type.innerText = 'Using: Game Controller';
+		document.getElementById("gamepad1 select").style.display = "block";
+		document.getElementById("gamepad2 select").style.display = "none";
+		document.getElementById("gamepad2").value = "None";
+	}else if(type === 'Phys'){//gamepadtype === 'interface'){
+		type.innerText = 'Using: Physical Interface';
+		document.getElementById("gamepad1 select").style.display = "block";
+		document.getElementById("gamepad2 select").style.display = "block";
+		
+	}
+	
+}
+
+function toggleText(id, text1, text2){
+	var but = document.getElementById(id);
+	
+	if (but.innerText === text1){//"Configure Gamepads") {
+		but.innerText = text2;//"Cancel";
+    }else if (but.innerText == text2){
+		but.innerText = text1;//"Configure Gamepads";
+	}
+}
+
+function dropdownToggle(dropdownID) {
+  document.getElementById(dropdownID).classList.toggle("show");
+}
+
+
+function toggleElement(elementId){
+	var x = document.getElementById(elementId)
+	//console.log(x.style.display);
+	if (x.style.display === "none") {
+		x.style.display = "block";
+    }else {
+		//console.log(x.style.display);
+		x.style.display = "none";
+		//console.log(x.style.display);
+	}
+	//console.log(x.style.display);
+	//.classList.toggle("show")
+}
+
+
+// Close the dropdown if the user clicks outside of it
+/*window.onclick = function(event) {
+ // start by closing every dropdown
+  /*var dropdowns = document.getElementsByClassName("dropdown-content");
+  for (let dd of dropdowns) dd.classList.toggle("open", false);* /
+  var closing = false;
+  if(event.target.matches('.dropbtn')){
+	if(event.target.nextElementSibling.classList.contains('show')){
+		closing = true;
+	}
+  }
+  closeDropdown();
+  // then if a link was clicked, open the associated dropdown
+  if (event.target.matches('.dropbtn') && closing == false) {
+    event.target.nextElementSibling.classList.toggle("show");
+  }
+  /*
+  if (!event.target.matches('.dropbtn')) {
+    closeDropdown();
+  }* /
+}*/
+
+function closeDropdown(){
+	var dropdowns = document.getElementsByClassName("dropdown-content");
+    var i;
+    for (i = 0; i < dropdowns.length; i++) {
+      var openDropdown = dropdowns[i];
+      if (openDropdown.classList.contains('show')) {
+        openDropdown.classList.remove('show');
+      }
+    }
+}
+//document.getElementById("demo").innerHTML = "Hello JavaScript!";
 
 //var gamepads = {};
 var haveEvents = 'ongamepadconnected' in window;
@@ -57,6 +443,20 @@ function connecthandler(e) {
 function addgamepad(gamepad) {
   controllers[gamepad.index] = gamepad; // adds GamePad gamepad to controllers array, in index of gamepad's index
 
+
+  //var drop1 = document.getElementById("GamepadDrop1");
+  //var drop2 = document.getElementById("GamepadDrop2");
+  
+  
+  /*var drops = [document.getElementById("GamepadDrop1"), document.getElementById("GamepadDrop2")];
+  var num = 0;
+  while(num < 2){
+	var drop = drops[num];
+	var gamepadBut = document.createElement("button");
+	gamepadBut.setAttribute("id", 
+  }*/
+  
+  
   var d = document.createElement("div");
   d.setAttribute("id", "controller" + gamepad.index);
 
@@ -98,8 +498,12 @@ function addgamepad(gamepad) {
   }
 
   document.body.appendChild(d);
-  requestAnimationFrame(updateStatus);
+  //requestAnimationFrame(updateStatus);
 }
+
+
+requestAnimationFrame(updateStatus);
+
 function disconnecthandler(e) {
 	
   removegamepad(e.gamepad);
@@ -114,11 +518,25 @@ function removegamepad(gamepad) {
   delete controllers[gamepad.index];
 }
 
+
+
+
+
+var updateCount = 0;
+var updateMax = 40;
+
 function updateStatus() {
+  if(!updateStopped){
+	updateCount++;
+  }
+  if(updateCount>updateMax){
+	updateCount = 0;
+	getPeriphUpdates();
+  }
+
   if (!haveEvents) {
     scangamepads();
   }
-  
   
   var i = 0;
   var j;
@@ -126,17 +544,23 @@ function updateStatus() {
 	var usingGameController = false;
 	var buttonNum = 0;
 	//var buttonsUpdated = false;
+	var controllerCount = 0;
   for (j in controllers) {
-	if(usingGameController && j>0){
+	if(usingGameController && controllerCount>0){
 		break;
-	}else if(j>1){
+	}else if(controllerCount>1){
 		break;
 	}
 	
     var controller = controllers[j];
 	
-	if(controller.axes.length==4){
+	if(controller.axes.length==4 && controllerCount<1){
 		usingGameController = true;
+		controllerCount = 1;
+	}else if(controller.buttons.length==12 && !usingGameController){
+		controllerCount+=1;
+	}else{
+		break;
 	}
 	//just checks for 4 axis to see if its a game controller
 	
@@ -195,7 +619,7 @@ function updateStatus() {
 	//todo: tell when axes or buttons updated, updated variable
 	//after, work out how to differentiate button press from toggle from hold on this end?
 	for (i = 0; i < controller.buttons.length; i++) {
-		if(!usingGameController && ((i > 2 && j == 0) || (i >5 && j == 1))){
+		if(!usingGameController && ((i > 2 && controllerCount == 0) || (i >5 && controllerCount == 1))){
 			//left joystick: movement, 3 buttons.
 			//right joystick: camera, 6 buttons.
 			break;
@@ -306,7 +730,7 @@ function updateStatus() {
 			
 			
 		}*/
-		var axesSetNum = j; //0 is movement, 1 is camera
+		var axesSetNum = controllerCount; //0 is movement, 1 is camera
 		if(usingGameController && i>1){
 			axesSetNum = 1;
 		}
@@ -631,8 +1055,17 @@ class CamDirection(Enum):
 	//then x and y cam direction enums, no spaces between.
 	var xmlhttp;
 	xmlhttp=new XMLHttpRequest();
+	xmlhttp.onreadystatechange = function() {
+		if (xmlhttp.readyState === 4) {
+		  //callback(xmlhttp.response);
+		  //console.log(xmlhttp.response);
+		}
+	}
+	
 	xmlhttp.open("HEAD","/data?" + message,true);
 	xmlhttp.onerror = checkData;
+	
+	
 	
 	function checkData()
 	{
@@ -648,7 +1081,7 @@ class CamDirection(Enum):
 		
 	}
 	xmlhttp.timeout = 600;
-	xmlhttp.ontimeout = blah;
+	xmlhttp.ontimeout = function () { blah("sendVals");}
 	xmlhttp.send();
 
 
@@ -755,7 +1188,7 @@ function moveAxis(gamepad, xAxis, yAxis)//val_1, val_2)
 				
 			}
 			xmlhttp.timeout = 600;
-			xmlhttp.ontimeout = blah;
+			xmlhttp.ontimeout = function () { blah("moveAxis");}
 			xmlhttp.send();
 			//sample(100);
 			/*for(var a = 0; a < 300; a++){
@@ -825,9 +1258,10 @@ async function sample(time) {
   console.log('b');
 }
 
-function blah(){
-	console.log("timeout");
+function blah(func){
+	console.log("timeout, in " + func);
 }
+
 /*
 function gamepadHandler(event, connecting) {
   var gamepad = event.gamepad;

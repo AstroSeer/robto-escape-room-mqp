@@ -48,4 +48,38 @@ label {
     text-align: left;
     margin-left: 95%;
     padding: 3px;
+  
+h2 {
+    color: #006614;
+    border-style: solid;
+    border-radius: 7px;
+    font-family: "Verdana", sans-serif;
+    text-align: center;
+    margin-left: 95%;
+}
+
+h3 {
+    color: #006614;
+    border-style: solid;
+    border-radius: 7px;
+    font-family: "Verdana", sans-serif;
+    text-align: center;
+    margin-left: 95%;
+}
+
+/*
+p {
+    color: #006614;
+    font-family: "Verdana", sans-serif;
+    text-align: center;
+}
+*/
+  
+video {
+    border: 7px #006614;
+    border-style: solid;
+    border-radius: 7px;
+    margin-left: 33%;
+    position: relative;
+
 }
