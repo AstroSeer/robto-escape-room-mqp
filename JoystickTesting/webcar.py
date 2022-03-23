@@ -38,6 +38,10 @@ def on_message(client, userdata, msg):
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
+client.connect(pi_ip_address)
+client.subscribe("esp32/state", 0)
+client.publish("rpi/passcode", 0)
+
 
 import os     #importing os library so as to communicate with the system
 os.system ("sudo pigpiod") #Launching GPIO library
@@ -117,7 +121,7 @@ UDcam_servo = 14 #up/down camera servo
 
 maxRight = 120
 maxLeft = 550
-maxUp = 190
+maxUp = 210
 maxDown = 500
 step = 3#20 #how far camera servos move in one step
 
@@ -144,7 +148,7 @@ magnetPin = 4
 GPIO.setup(lightPin, GPIO.IN)
 # For Lift
 ESC=13  #Connect the ESC in this GPIO pin 
-speed = 200#TODO: adjust speed value, make slower so robot moves slower
+speed = 150#TODO: adjust speed value, make slower so robot moves slower
 stop = 1500
 
 topLimitPin = 5
@@ -333,6 +337,10 @@ def update(dt):
     #TODO: prevent race conditions with Flask app changing values of buttons and axes?? 
     #maybe just set local variables equal to what the values were at the beginning of update?
     global UVToggle, flashlightToggle, magnetToggle, cam_center, buttonVals
+    
+    #see if room state changed, this is not like a while loop
+    client.loop()
+    
     #if python 3.10 or above, can use "match", works like switch statements 
     if carDir == CarDirection.NONE.value:
         stopcar()
@@ -512,7 +520,6 @@ class MyThread(threading.Thread):
 if __name__ == "__main__":
     try:
         stopFlag = threading.Event()
-        client.connect(pi_ip_address)
         thread = MyThread(stopFlag)
         thread.daemon=True
         thread.start()
