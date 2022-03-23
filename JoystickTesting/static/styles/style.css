@@ -20,6 +20,35 @@ h1 {
     margin-right: 30%;
 }
 
+p {
+    color: #006614;
+    font-family: "Verdana", sans-serif;
+    border-style: solid;
+    border-radius: 7px;
+    text-align: center;
+    margin-left: 30%;
+    margin-right: 30%;
+}
+
+img {
+    display: block;
+    border: 7px #006614;
+    border-style: solid;
+    width: 600px;
+    height: 450px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+label {
+    color: #006614;
+    border-style: solid;
+    border-radius: 7px;
+    font-family: "Verdana", sans-serif;
+    text-align: left;
+    margin-left: 95%;
+    padding: 3px;
+  
 h2 {
     color: #006614;
     border-style: solid;
@@ -38,16 +67,19 @@ h3 {
     margin-left: 95%;
 }
 
+/*
 p {
     color: #006614;
     font-family: "Verdana", sans-serif;
     text-align: center;
 }
-
+*/
+  
 video {
     border: 7px #006614;
     border-style: solid;
     border-radius: 7px;
     margin-left: 33%;
     position: relative;
+
 }

@@ -15,15 +15,14 @@ import flask
 from flask import Response
 import threading
 import atexit
-import RobtoCam #--- add back in
-#import RobtoCamTest #--- only for testing
+import RobtoCam
 import Adafruit_PCA9685 #--- add back in
 from flask import Flask, render_template, request, send_from_directory
 import RPi.GPIO as GPIO #--- add back in
 from enum import Enum
 import paho.mqtt.client as mqtt
 
-pi_ip_address='130.215.220.128'#'localhost'
+pi_ip_address='130.215.172.60'#'localhost'
 
 # Initialise the PCA9685 using the default address (0x40).
 pwm = Adafruit_PCA9685.PCA9685() #--- add back in
@@ -42,8 +41,9 @@ def on_message(client, userdata, msg):
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
-#--- add back in, block uncomment above 
-
+client.connect(pi_ip_address)
+client.subscribe("esp32/state", 0)
+client.publish("rpi/passcode", 0)
 
 import os     #importing os library so as to communicate with the system
 os.system ("sudo pigpiod") #Launching GPIO library
@@ -127,7 +127,7 @@ UDcam_servo = 14 #up/down camera servo
 
 maxRight = 120
 maxLeft = 550
-maxUp = 190
+maxUp = 210
 maxDown = 500
 step = 3#20 #how far camera servos move in one step 
 #TODO: test lowering step value, or maybe stepping less often
@@ -156,7 +156,7 @@ GPIO.setup(lightPin, GPIO.IN) #--- add back in
 
 # For Lift
 ESC=13  #Connect the ESC in this GPIO pin 
-speed = 200 #TODO: change name of this, specify that it's for lift
+speed = 150#TODO: adjust speed value, make slower so robot moves slower
 stop = 1500
 
 topLimitPin = 5
@@ -356,6 +356,10 @@ def update(dt):
     #TODO: prevent race conditions with Flask app changing values of buttons and axes?? 
     #maybe just set local variables equal to what the values were at the beginning of update?
     global UVToggle, flashlightToggle, magnetToggle, cam_center, buttonVals
+    
+    #see if room state changed, this is not like a while loop
+    client.loop()
+    
     #if python 3.10 or above, can use "match", works like switch statements 
     if carDir == CarDirection.NONE.value:
         stopcar()
@@ -389,6 +393,8 @@ def update(dt):
         centerCam()
     else:
         turnCam()
+    
+#     cam.set_terminal("default")
     #TODO: use button enums for the following, rather than hardcoded numbers 
      # Checks UV Flashlight
     if(UVToggle == Toggle.TURN_ON.value and buttonVals[3]==1):
@@ -447,11 +453,6 @@ app = Flask(__name__, static_url_path='')
 def hello():
    return render_template('testing.html')
 
-   
-   
-   
-   
-   
 promptingForPasscode = False;
 currentPasscode = 0;
 
@@ -550,20 +551,6 @@ def responding():
     # LIFT_DOWN = 8
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
 @app.route("/data")
 def recieve1(): #buttonvals,moveAxesVal,camAxesVals):
     global carDir, camDirX, camDirY, buttonVals, prevButtonState, prevButtons, UVToggle, magnetToggle, flashlightToggle, center_cam
@@ -656,7 +643,6 @@ def cleanup():
 if __name__ == "__main__":
     try:
         stopFlag = threading.Event()
-        client.connect(pi_ip_address)
         thread = MyThread(stopFlag)
         thread.daemon=True
         thread.start()
