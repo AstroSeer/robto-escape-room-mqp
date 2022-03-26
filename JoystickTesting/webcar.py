@@ -612,7 +612,7 @@ def video_feed():
         # return Response(cam.start(), mimetype='multipart/x-mixed-replace; boundary=frame')#--- only for testing
     # else:#--- only for testing
         # return#--- only for testing
-    return Response#cam.start(), mimetype='multipart/x-mixed-replace; boundary=frame') #--- add back in
+    return Response(cam.start(), mimetype='multipart/x-mixed-replace; boundary=frame') #--- add back in
         
 class MyThread(threading.Thread):
     def __init__(self, event):
