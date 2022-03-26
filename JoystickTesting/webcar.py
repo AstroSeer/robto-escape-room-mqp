@@ -33,7 +33,7 @@ Room Setup
 """
 room_state = ""
 # passcode_states = ["Door"]
-passcodes = dict({"DoorCode": "12345"})
+passcodes = {"'DoorCode'": "12345"}
 promptingForPasscode = False
 
 """
@@ -44,6 +44,7 @@ def on_connect(client, userdata, flags, rc):
     client.subscribe("esp32/state")
     
 def on_message(client, userdata, msg):
+    global room_state
 #     print("Message Received: " + msg.topic + " " + str(msg.payload)[1:])
     room_state = str(msg.payload)[1:]
 
@@ -356,7 +357,9 @@ peripheralUpdates = True;
 def checkState():
     global room_state, passcodes, promptingForPasscode
     if(room_state in passcodes):
-        promptingForPasscode = True;
+        promptingForPasscode = True
+    else:
+        promptingForPasscode = False
         
 def checkPasscode(inputCode):
     global room_state, passcodes
@@ -628,11 +631,11 @@ def recieve(buttonvals,moveAxesVal,camAxesVals):
 @app.route('/video_feed')
 def video_feed():
     #Video streaming route. Put this in the src attribute of an img tag
-    if(usingCam):#--- only for testing
-        return Response(cam.start(), mimetype='multipart/x-mixed-replace; boundary=frame')#--- only for testing
-    else:#--- only for testing
-        return#--- only for testing
-    #return Response#cam.start(), mimetype='multipart/x-mixed-replace; boundary=frame') #--- add back in
+#     if(usingCam):#--- only for testing
+#         return Response(cam.start(), mimetype='multipart/x-mixed-replace; boundary=frame')#--- only for testing
+#     else:#--- only for testing
+#         return#--- only for testing
+    return Response(cam.start(), mimetype='multipart/x-mixed-replace; boundary=frame') #--- add back in
         
 class MyThread(threading.Thread):
     def __init__(self, event):
