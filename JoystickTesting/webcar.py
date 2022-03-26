@@ -607,12 +607,12 @@ def recieve(buttonvals,moveAxesVal,camAxesVals):
 #TODO: fix problem when right click image and "open image in new tab"
 @app.route('/video_feed')
 def video_feed():
-    #Video streaming route. Put this in the src attribute of an img tag
-    if(usingCam):#--- only for testing
-        return Response(cam.start(), mimetype='multipart/x-mixed-replace; boundary=frame')#--- only for testing
-    else:#--- only for testing
-        return#--- only for testing
-    #return Response#cam.start(), mimetype='multipart/x-mixed-replace; boundary=frame') #--- add back in
+    # #Video streaming route. Put this in the src attribute of an img tag
+    # if(usingCam):#--- only for testing
+        # return Response(cam.start(), mimetype='multipart/x-mixed-replace; boundary=frame')#--- only for testing
+    # else:#--- only for testing
+        # return#--- only for testing
+    return Response#cam.start(), mimetype='multipart/x-mixed-replace; boundary=frame') #--- add back in
         
 class MyThread(threading.Thread):
     def __init__(self, event):
