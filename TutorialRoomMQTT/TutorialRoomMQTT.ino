@@ -24,14 +24,14 @@ CRGB dockLed[numBlockDockLed];
 const char *ssid = "WPI-Open";
 const char *password = NULL;
 const char *ID = "esp_boi";  // Name of our device, must be unique
-IPAddress broker(130, 215, 220, 128); // IP address of your MQTT broker eg. 192.168.1.50
+IPAddress broker(130, 215, 172, 60); // IP address of your MQTT broker eg. 192.168.1.50
 WiFiClient wclient;
 PubSubClient client(wclient); // Setup MQTT client
 
 /* Publishers -> "esp32/..."  */
 const char *room_state = "esp32/state";  
 /* Subscribers -> "rpi/..."  */
-const char *receive_code = "rpi/code";
+const char *receive_code = "rpi/passcode";
 
 /* LCD Stuff */
 U8G2_SSD1306_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0, /* clock=*/ 15, /* data=*/ 4, /* reset=*/ 16);
@@ -68,26 +68,27 @@ int down2 = 40;
 const int doorDock1Pin = 27;
 
 /* IR Variables */
-const int irPin = 25; // 1100 no robot, < 1400 robot detected
+const int irPin = 33; // 1100 no robot, < 1400 robot detected
 float doorThreshold = 2000;
 float irDistance;
 const int numIRReadings = 50;
 int totalIR;
 
 /* Room States */
-enum ROOM {Start, BlockDock, Door, End};  //ADD NEW STATES TO get_state() METHOD
+enum ROOM {Start, BlockDock, Door, DoorCode, End};  //ADD NEW STATES TO get_state() METHOD
 static unsigned int state = Start;
 static unsigned int nextState;
+bool passcodeAccepted = false;
 
 /* Turns enumerated state into string; to display to esp */
 char* get_state(unsigned int state){
-  char* retState[] = {"Start", "Block Dock", "Door", "End"}; //add more states (in order of enumeration)...
+  char* retState[] = {"Start", "Block Dock", "Door", "DoorCode", "End"}; //add more states (in order of enumeration)...
   return retState[state];
 }
 
 void setup() {
   Serial.begin(115200);
-  while(!Serial) {} //comment out unless testing!
+//  while(!Serial) {} //comment out unless testing!
   /* setup MQTT protocols */
   WiFi.begin(ssid, NULL); // Connect to network
   while (WiFi.status() != WL_CONNECTED) { // Wait for connection
@@ -182,13 +183,21 @@ bool checkIRDoor() {
   }
 }
 
+bool checkCorrectPasscode(){
+  return passcodeAccepted;
+}
+
 /* Handlers */
 void handleBlockDock1() {
   if (state == BlockDock) state = Door;
   dockLed[0] = CRGB::Green; //update led color
 }
 void handleIRDoor() {
-  if (state == Door) state = End;
+  if (state == Door) state = DoorCode;
+}
+
+void handleCorrectPasscode(){
+  if(state == DoorCode) state = End;
 }
 
 void loop() {
@@ -196,15 +205,16 @@ void loop() {
   check_connection();
   char* state_msg = get_state(state);
   pub(room_state, state_msg);
-  Serial.print("\nState: ");
-  Serial.print(state);
-  Serial.print(" -> ");
-  Serial.println(state_msg);
+//  Serial.print("\nState: ");
+//  Serial.print(state);
+//  Serial.print(" -> ");
+//  Serial.println(state_msg);
   
   display_lcd(state_msg);
   
-  if (checkBlockDock1())  handleBlockDock1();
-  if (checkIRDoor())      handleIRDoor();
+  if (checkBlockDock1())      handleBlockDock1();
+  if (checkIRDoor())          handleIRDoor();
+  if (checkCorrectPasscode()) handleCorrectPasscode();
 
   switch (state) {
 
@@ -223,6 +233,7 @@ void loop() {
       break;
 
     case End:
+      passcodeAccepted = false; //reset boolean
       doorControl(true); //open door
       break;
   }
@@ -260,27 +271,19 @@ void check_connection(){
 
 /* Handles ALL Subscribers */
 void callback(char* topic, byte* message, unsigned int length) {
-  Serial.print("Message arrived on topic: ");
-  Serial.print(topic);
-  Serial.print(". Message: ");
   String messageTemp;
   
   for (int i = 0; i < length; i++) {
-    Serial.print((char)message[i]);
     messageTemp += (char)message[i];
   }
-  Serial.println();
   
-//  if (String(topic) == sub_topic) {
-//    Serial.print("Changing output to ");
-//    if(messageTemp == "on"){
-//      Serial.println("on");
-//      digitalWrite(LED_PIN, HIGH);
-//    }
-//    else if(messageTemp == "off"){
-//      Serial.println("off");
-//      digitalWrite(LED_PIN, LOW);
-//    }
-//  }
+  if (String(topic) == receive_code) {
+    if(messageTemp == "accepted"){
+      passcodeAccepted = true;
+    }
+    else if(messageTemp == "denied"){
+      passcodeAccepted = false;
+    }
+  }
 }
 /*************************************************************/
