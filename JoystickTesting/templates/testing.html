@@ -253,7 +253,13 @@ function getPeriphUpdates(){
 				
 				var prompt = dict["prompt"];
 				if (prompt != ""){
-					document.getElementById("debugCodePromptInfo").innerHTML = prompt;
+					if(prompt == true){
+						document.getElementById("debugCodePromptInfo").innerHTML = "Please Enter Passcode";
+					}else{
+						document.getElementById("debugCodePromptInfo").innerHTML = "";
+					}
+				}else{
+					document.getElementById("debugCodePromptInfo").innerHTML = "";
 				}
 					
 				var periphs = dict["peripherals"];
