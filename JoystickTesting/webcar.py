@@ -29,21 +29,30 @@ pwm = Adafruit_PCA9685.PCA9685() #--- add back in
 pwm.set_pwm_freq(60)#--- add back in
 
 """
-START MQTT STUFF #--- add back in, block uncomment below
+Room Setup
+"""
+room_state = ""
+# passcode_states = ["Door"]
+passcodes = {"'DoorCode'": "12345"}
+promptingForPasscode = False
+
+"""
+START MQTT STUFF
 """
 def on_connect(client, userdata, flags, rc):
     print(f"Connected with result code {rc}")
     client.subscribe("esp32/state")
     
 def on_message(client, userdata, msg):
-    print("Message Received: " + msg.topic + " " + str(msg.payload))
+    global room_state
+#     print("Message Received: " + msg.topic + " " + str(msg.payload)[1:])
+    room_state = str(msg.payload)[1:]
 
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
 client.connect(pi_ip_address)
 client.subscribe("esp32/state", 0)
-client.publish("rpi/passcode", 0)
 
 import os     #importing os library so as to communicate with the system
 os.system ("sudo pigpiod") #Launching GPIO library
@@ -277,17 +286,12 @@ def moveLift():
         
 def checkLiftLimits():
     global liftDir
-    #return #--- only for testing
-    #pseudocode for how we can restrict user from abusing lift
     if(GPIO.input(topLimitPin) == 0):
-#         print("top switch hit")
         liftDir = LiftDirection.UP.value
     elif(GPIO.input(bottomLimitPin) == 0):
-#         print("bottom switch hit")
         liftDir = LiftDirection.DOWN.value
     
 def whiteFlashlight(status):
-    #return #--- only for testing
     if(status):
         pwm.set_pwm(whitePin, 0, 4000)
     else:
@@ -295,7 +299,6 @@ def whiteFlashlight(status):
     pwm.set_pwm(UVPin, 0, 0)
     
 def uvFlashlight(status):
-    #return #--- only for testing
     if(status):
         pwm.set_pwm(UVPin, 0, 4000)    #switch leds on and off
     else:
@@ -303,7 +306,6 @@ def uvFlashlight(status):
     pwm.set_pwm(whitePin, 0, 0)
 
 def magnet(status):
-    #return #--- only for testing
     if(status):
         pwm.set_pwm(magnetPin, 0, 4000)    #switch EM on and off
     else:
@@ -352,6 +354,21 @@ liftDir = LiftDirection.NONE.value
 peripheralUpdates = True;
 #waitingForUpdates = False;
 
+def checkState():
+    global room_state, passcodes, promptingForPasscode
+    if(room_state in passcodes):
+        promptingForPasscode = True
+    else:
+        promptingForPasscode = False
+        
+def checkPasscode(inputCode):
+    global room_state, passcodes
+    if(passcodes[room_state] == inputCode):
+        client.publish("rpi/passcode", "accepted")
+    else:
+        client.publish("rpi/passcode", "denied")
+        
+
 def update(dt):
     #TODO: prevent race conditions with Flask app changing values of buttons and axes?? 
     #maybe just set local variables equal to what the values were at the beginning of update?
@@ -359,6 +376,9 @@ def update(dt):
     
     #see if room state changed, this is not like a while loop
     client.loop()
+    
+    #see if in state requiring passcode
+    checkState()
     
     #if python 3.10 or above, can use "match", works like switch statements 
     if carDir == CarDirection.NONE.value:
@@ -453,16 +473,17 @@ app = Flask(__name__, static_url_path='')
 def hello():
    return render_template('testing.html')
 
-promptingForPasscode = False;
-currentPasscode = 0;
-
-passcodeList = ["9435", "blah"];
+# promptingForPasscode = False;
+# currentPasscode = 0;
+# 
+# passcodeList = ["9435", "blah"];
    
 from flask import Response
 import json
 
 @app.route("/sendPasscode")
-def recievePasscode(): 
+def recievePasscode():
+    global room_state, passcodes, promptingForPasscode
     passcodeInput = request.args.get('passcode');
     print(passcodeInput);
     data = [0,0];
@@ -472,10 +493,12 @@ def recievePasscode():
     else:
         data[0] = 0;#not looking for passcode
         
-    if(passcodeInput == passcodeList[currentPasscode]):
+    if(passcodeInput == passcodes[room_state]):
         data[1] = 1; #correct passcode
+        client.publish("rpi/passcode", "accepted")
     else:
         data[1] = 0; #incorrect passcode
+        client.publish("rpi/passcode", "denied")
     return Response(json.dumps(data), mimetype = 'text/xml')
     
      
@@ -607,11 +630,11 @@ def recieve(buttonvals,moveAxesVal,camAxesVals):
 #TODO: fix problem when right click image and "open image in new tab"
 @app.route('/video_feed')
 def video_feed():
-    # #Video streaming route. Put this in the src attribute of an img tag
-    # if(usingCam):#--- only for testing
-        # return Response(cam.start(), mimetype='multipart/x-mixed-replace; boundary=frame')#--- only for testing
-    # else:#--- only for testing
-        # return#--- only for testing
+    #Video streaming route. Put this in the src attribute of an img tag
+#     if(usingCam):#--- only for testing
+#         return Response(cam.start(), mimetype='multipart/x-mixed-replace; boundary=frame')#--- only for testing
+#     else:#--- only for testing
+#         return#--- only for testing
     return Response(cam.start(), mimetype='multipart/x-mixed-replace; boundary=frame') #--- add back in
         
 class MyThread(threading.Thread):
