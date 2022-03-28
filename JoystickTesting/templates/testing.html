@@ -562,7 +562,7 @@ function updateStatus() {
 	
 	if(controller.axes.length==4 && controllerCount<1){
 		usingGameController = true;
-		controllerCount = 1;
+		controllerCount = 1;//2;//??
 	}else if(controller.buttons.length==12 && !usingGameController){
 		controllerCount+=1;
 	}else{
@@ -625,13 +625,15 @@ function updateStatus() {
 	//todo: tell when axes or buttons updated, updated variable
 	//after, work out how to differentiate button press from toggle from hold on this end?
 	for (i = 0; i < controller.buttons.length; i++) {
-		if(!usingGameController && ((i > 2 && controllerCount == 0) || (i >5 && controllerCount == 1))){
+		if(!usingGameController && ((i > 2 && controllerCount == 1) || (i >5 && controllerCount == 2))){
 			//left joystick: movement, 3 buttons.
 			//right joystick: camera, 6 buttons.
+			//console.log("inside using phys int");
 			break;
 		}else if(usingGameController && i>8){
 			break;
 		}
+		//console.log("controllerCount: " + controllerCount);
 		//console.log(controller.buttons.length); game controller: 17
       var b = buttons[i];
       var val = controller.buttons[i];
@@ -736,7 +738,7 @@ function updateStatus() {
 			
 			
 		}*/
-		var axesSetNum = controllerCount; //0 is movement, 1 is camera
+		var axesSetNum = controllerCount-1; //0 is movement, 1 is camera
 		if(usingGameController && i>1){
 			axesSetNum = 1;
 		}

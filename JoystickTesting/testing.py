@@ -54,7 +54,7 @@ START MQTT STUFF #--- add back in, block uncomment below
 #make it so that if it has not recieved anything from the html for a while,
     #it stops moving
 
-usingCam = True #False #--- only for testing
+usingCam = False #False #--- only for testing
 class CamDirection(Enum):
     NONE = 0
     RIGHT = 1
