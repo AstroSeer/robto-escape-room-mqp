@@ -50,7 +50,8 @@ class Camera:
                 break
             #rotates image 180 degrees
             rotated_img = cv2.rotate(frame, cv2.ROTATE_180)
-            self.frame = rotated_img           
+            self.frame = rotated_img
+            self.frame = self.rescale(self.frame, 70) 
             #sets camera to recognize aruco markers
             dictionary = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_50)
             parameters= cv2.aruco.DetectorParameters_create()         
@@ -61,18 +62,19 @@ class Camera:
             #print(markerIds)
             
             #draws markers on camera
-            # self.frame = cv2.aruco.drawDetectedMarkers(self.frame, markerCorners, markerIds)           
+#             self.frame = cv2.aruco.drawDetectedMarkers(self.frame, markerCorners, markerIds)           
             
             #gets perimeter of detected marker
             if self.markerCorners:
                 aruco_size = cv2.arcLength(markerCorners[0], True)
 #                 print(aruco_perimeter)
                 
-            if(len(self.markerCorners) == 4) and (aruco_size > 100):
-                self.set_terminal(self.terminalState)
+            if(len(self.markerCorners) == 1) and (aruco_size > 100):
+                self.set_terminal(aruco_size)
+                 
 
             #makes image bigger
-            self.frame = self.rescale(self.frame, 70) 
+#             self.frame = self.rescale(self.frame, 70) 
             
             #displays frame
 #             cv2.imshow("Frame", self.frame)
@@ -98,63 +100,59 @@ class Camera:
         # """Video streaming home page."""
         # return render_template('testing.html')
 
-    def set_terminal(self, state):
-        if(state is "accepted"):
-            terminal_status = cv2.imread("terminal/PWD_GOOD2.png")
-        elif(state is "denied"):
-            terminal_status = cv2.imread("terminal/PWD_BAD2.png")
+    def set_terminal(self, aruco_size):
+        if(self.terminalState is "accepted"):
+            terminal_status = "Password Accepted"#cv2.imread("terminal/PWD_GOOD2.png")
+        elif(self.terminalState is "denied"):
+            terminal_status = "Password Denied"#cv2.imread("terminal/PWD_BAD2.png")
         else:
-            terminal_status = cv2.imread("terminal/PWD_START.png")
+            terminal_status = 'Enter Password'#cv2.imread("terminal/PWD_START.png")
 
 
         index = np.squeeze(np.where(self.markerIds==0))
         refPt1 = np.squeeze(self.markerCorners[index[0]])[0]
-        
-        index = np.squeeze(np.where(self.markerIds==3))
         refPt2 = np.squeeze(self.markerCorners[index[0]])[1]
-
-        distance = np.linalg.norm(refPt1-refPt2)
-        
-        scalingFac = 0.02
-        pts_dst = [[refPt1[0] - round(scalingFac*distance), refPt1[1] - round(scalingFac*distance)]]
-        pts_dst = pts_dst + [[refPt2[0] + round(scalingFac*distance), refPt2[1] - round(scalingFac*distance)]]
-        
-        index = np.squeeze(np.where(self.markerIds==1))
         refPt3 = np.squeeze(self.markerCorners[index[0]])[2]
-        pts_dst = pts_dst + [[refPt3[0] + round(scalingFac*distance), refPt3[1] + round(scalingFac*distance)]]
-
-        index = np.squeeze(np.where(self.markerIds==2))
         refPt4 = np.squeeze(self.markerCorners[index[0]])[3]
-        pts_dst = pts_dst + [[refPt4[0] - round(scalingFac*distance), refPt4[1] + round(scalingFac*distance)]]
 
-        pts_src = [[0,0], [terminal_status.shape[1], 0], [terminal_status.shape[1], terminal_status.shape[0]], [0, terminal_status.shape[0]]]
-        
-        pts_src_m = np.asarray(pts_src)
-        pts_dst_m = np.asarray(pts_dst)
-        
-        # Calculate Homography
-        h, status = cv2.findHomography(pts_src_m, pts_dst_m)
-        # Warp source image to destination based on homography
-        warped_image = cv2.warpPerspective(terminal_status, h, (self.frame.shape[1],self.frame.shape[0]))
-        
-        # Prepare a mask representing region to copy from the warped image into the original frame
-        mask = np.zeros([self.frame.shape[0], self.frame.shape[1]], dtype=np.uint8)
-        cv2.fillConvexPoly(mask, np.int32([pts_dst_m]), (255, 255, 255), cv2.LINE_AA)
+        scaling_factor = 6
+        pts_dst = [[refPt1[0]-aruco_size/scaling_factor, refPt1[1]],
+                   [refPt2[0]+aruco_size/scaling_factor, refPt2[1]],
+                   [refPt3[0]+aruco_size/scaling_factor, refPt3[1]],
+                   [refPt4[0]-aruco_size/scaling_factor, refPt4[1]]]
 
-        # Erode the mask to not copy the boundary effects from the warping
-        element = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
-        mask = cv2.erode(mask, element, iterations=3)
-
-        # Copy the mask into 3 channels.
-        warped_image = warped_image.astype(float)
-        mask3 = np.zeros_like(warped_image)
-        for i in range(0, 3):
-            mask3[:,:,i] = mask/255
+        pts_dst_m = np.array(pts_dst)
+        cv2.fillPoly(self.frame, np.int32([pts_dst_m]), (0,0,0))
+        
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        textSize = cv2.getTextSize(terminal_status, font, 1,2)[0]
+        poly_center = np.int32([refPt1[0], # + np.round((refPt2[0]-refPt1[0])/2)) + textSize[0])/2,
+                                refPt1[1]])# + np.round((refPt4[1]-refPt1[1])/2)) + textSize[1])/2])
+        cv2.putText(self.frame, terminal_status, poly_center, font, 0.5, (0,255,0), 2, cv2.LINE_AA)
+        
+#         # Calculate Homography
+#         h, status = cv2.findHomography(pts_src_m, pts_dst_m)
+#         # Warp source image to destination based on homography
+#         warped_image = cv2.warpPerspective(terminal_status, h, (self.frame.shape[1], self.frame.shape[0]))
+        
+#         # Prepare a mask representing region to copy from the warped image into the original frame
+#         mask = np.zeros([self.frame.shape[0], self.frame.shape[1]], dtype=np.uint8)
+#         cv2.fillConvexPoly(mask, np.int32([pts_dst_m]), (255, 255, 255), cv2.LINE_AA)
+# 
+#         # Erode the mask to not copy the boundary effects from the warping
+#         element = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
+#         mask = cv2.erode(mask, element, iterations=3)
+# 
+#         # Copy the mask into 3 channels.
+#         warped_image = warped_image.astype(float)
+#         mask3 = np.zeros_like(warped_image)
+#         for i in range(0, 3):
+#             mask3[:,:,i] = mask/255
 
         # Copy the masked warped image into the original frame in the mask region
-        warped_image_masked = cv2.multiply(warped_image, mask3)
-        frame_masked = cv2.multiply(self.frame.astype(float), 1-mask3)
-        self.frame = cv2.add(warped_image_masked, frame_masked)
+#         warped_image_masked = cv2.multiply(warped_image, mask3)
+#         frame_masked = cv2.multiply(self.frame.astype(float), 1-mask3)
+#         self.frame = cv2.add(warped_image, self.frame)
 
     
 # c = Camera()

@@ -32,7 +32,6 @@ pwm.set_pwm_freq(60)#--- add back in
 Room Setup
 """
 room_state = ""
-# passcode_states = ["Door"]
 passcodes = {"'DoorCode'": "12345"}
 promptingForPasscode = False
 
@@ -124,11 +123,6 @@ move_speed = 1350  # Max pulse length out of 4096 #--- add back in
 turn_speed = 1300 #--- add back in
 
 servo_ctr = 320 #ultrasonic sensor facing front
-
-# servo_rgt = 150 #ultrasonic sensor facing left #unneeded?? ask owen
-# servo_lft = 500 #ultrasonic sensor facing right #unneeded?? ask owen
-
-
 LRservo_cur = servo_ctr
 UDservo_cur = servo_ctr
 LRcam_servo = 15 #left/right camera servo
@@ -361,14 +355,13 @@ def checkState():
     else:
         promptingForPasscode = False
         
-def checkPasscode(inputCode):
-    global room_state, passcodes
-    if(passcodes[room_state] == inputCode):
-        client.publish("rpi/passcode", "accepted")
-    else:
-        client.publish("rpi/passcode", "denied")
+# def checkPasscode(inputCode):
+#     global room_state, passcodes
+#     if(passcodes[room_state] == inputCode):
+#         client.publish("rpi/passcode", "accepted")
+#     else:
+#         client.publish("rpi/passcode", "denied")
         
-
 def update(dt):
     #TODO: prevent race conditions with Flask app changing values of buttons and axes?? 
     #maybe just set local variables equal to what the values were at the beginning of update?
