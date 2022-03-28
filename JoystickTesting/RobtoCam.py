@@ -67,10 +67,10 @@ class Camera:
             #gets perimeter of detected marker
             if self.markerCorners:
                 aruco_size = cv2.arcLength(markerCorners[0], True)
-#                 print(aruco_perimeter)
+                print(aruco_size)
                 
-            if(len(self.markerCorners) == 1) and (aruco_size > 100):
-                self.set_terminal(aruco_size)
+#             if(len(self.markerCorners) == 1) and (aruco_size > 100):
+#                 self.set_terminal(aruco_size)
                  
 
             #makes image bigger

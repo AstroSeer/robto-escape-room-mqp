@@ -70,7 +70,6 @@ class CamDirection(Enum):
     UP = 3
     DOWN = 4
 
-
 class CarDirection(Enum):
     NONE = 0
     FORWARD = 1
