@@ -50,6 +50,10 @@ const u8g2_uint_t pixel_area_width = tile_area_width * 8;
 const u8g2_uint_t pixel_area_height = tile_area_height * 8;
 /* End LCD Stuff */
 
+/* Previous/Next State Buttons */
+const int prevStateBtn = 37;
+const int nextStateBtn = 36;
+
 /* Establish Servos */
 Servo door1;
 Servo door2;
@@ -75,14 +79,15 @@ const int numIRReadings = 50;
 int totalIR;
 
 /* Room States */
-enum ROOM {Start, BlockDock, Door, DoorCode, End};  //ADD NEW STATES TO get_state() METHOD
+enum ROOM {Start, BlockDock, Door, End};  //ADD NEW STATES TO get_state() METHOD
 static unsigned int state = Start;
+static unsigned int prevState;
 static unsigned int nextState;
 bool passcodeAccepted = false;
 
 /* Turns enumerated state into string; to display to esp */
 char* get_state(unsigned int state){
-  char* retState[] = {"Start", "Block Dock", "Door", "DoorCode", "End"}; //add more states (in order of enumeration)...
+  char* retState[] = {"Start", "Block Dock", "Door", "End"}; //add more states (in order of enumeration)...
   return retState[state];
 }
 
@@ -106,8 +111,9 @@ void setup() {
 
   /* Room Puzzle Stuff Setup */
   pinMode(doorDock1Pin, INPUT_PULLUP);
-
   pinMode(irPin, INPUT);
+  pinMode(prevStateBtn, INPUT_PULLUP);
+  pinMode(nextStateBtn, INPUT_PULLUP);
 
   /* Room LED Setup */
   //FastLED.addLeds<NEOPIXEL, doorDataPin>(doorLed, numDoorLed);
@@ -127,27 +133,23 @@ void prepare(void){
   u8g2.drawStr(22,15,"Current State");  // write something to the internal memory
   u8g2.drawBox(pixel_area_x_pos-1, pixel_area_y_pos-1, pixel_area_width+2, pixel_area_height+2);
   u8g2.sendBuffer();          // transfer internal memory to the display
-  u8g2.setFont(u8g2_font_courB18_tr); // set the target font for the text width calculation
+  u8g2.setFont(u8g2_font_courB14_tr); // set the target font for the text width calculation
   width = u8g2.getUTF8Width(text);    // calculate the pixel width of the text
-  offset = width+pixel_area_width;
+  offset = width;
 }
 
 /* Refreshes LCD screen to current state */
 void display_lcd(char* state){
   u8g2.clearBuffer();            // clear the complete internal memory
   text = state;
-  u8g2.setFont(u8g2_font_courB18_tr);   // set the target font
-  u8g2.drawUTF8(pixel_area_x_pos-width+offset, 
+  u8g2.setFont(u8g2_font_courB12_tr);   // set the target font
+  u8g2.drawUTF8(pixel_area_x_pos, 
     pixel_area_y_pos+pixel_area_height+u8g2.getDescent()-1, 
     text);                // draw the scolling text
   
   // now only update the selected area, the rest of the display content is not changed
   u8g2.updateDisplayArea(tile_area_x_pos, tile_area_y_pos, tile_area_width, tile_area_height);
       
-  offset--;               // scroll by one pixel
-  if ( offset == 0 )  
-    offset = width+pixel_area_width;      // start over again
-    
   delay(10);              // do some small delay
 }
 
@@ -169,19 +171,19 @@ bool checkBlockDock1() {
 }
 
 /* Return true when a robot is detected in front of door */
-bool checkIRDoor() {
-  totalIR = 0; //reset total
-  for (int i = 0; i < numIRReadings; i++) {
-    totalIR = totalIR + analogRead(irPin);
-  }
-  irDistance = totalIR / numIRReadings;  //find average sensor reading
-  //Serial.println(irDistance);
-  if (irDistance > doorThreshold) {
-    return true;
-  } else {
-    return false;
-  }
-}
+//bool checkIRDoor() {
+//  totalIR = 0; //reset total
+//  for (int i = 0; i < numIRReadings; i++) {
+//    totalIR = totalIR + analogRead(irPin);
+//  }
+//  irDistance = totalIR / numIRReadings;  //find average sensor reading
+//  //Serial.println(irDistance);
+//  if (irDistance > doorThreshold) {
+//    return true;
+//  } else {
+//    return false;
+//  }
+//}
 
 bool checkCorrectPasscode(){
   return passcodeAccepted;
@@ -192,12 +194,12 @@ void handleBlockDock1() {
   if (state == BlockDock) state = Door;
   dockLed[0] = CRGB::Green; //update led color
 }
-void handleIRDoor() {
-  if (state == Door) state = DoorCode;
-}
+//void handleIRDoor() {
+//  if (state == Door) state = DoorCode;
+//}
 
 void handleCorrectPasscode(){
-  if(state == DoorCode) state = End;
+  if(state == Door) state = End;
 }
 
 void loop() {
@@ -205,16 +207,13 @@ void loop() {
   check_connection();
   char* state_msg = get_state(state);
   pub(room_state, state_msg);
-//  Serial.print("\nState: ");
-//  Serial.print(state);
-//  Serial.print(" -> ");
-//  Serial.println(state_msg);
   
   display_lcd(state_msg);
   
-  if (checkBlockDock1())      handleBlockDock1();
-  if (checkIRDoor())          handleIRDoor();
-  if (checkCorrectPasscode()) handleCorrectPasscode();
+  if (checkBlockDock1())                handleBlockDock1();
+  if (checkCorrectPasscode())           handleCorrectPasscode();
+  if (digitalRead(prevStateBtn)==HIGH)  state = state - 1;
+  if (digitalRead(nextStateBtn)==HIGH)  state = state + 1;
 
   switch (state) {
 
@@ -229,7 +228,7 @@ void loop() {
       break;
 
     case Door:
-
+        doorControl(false); //close door
       break;
 
     case End:
@@ -276,6 +275,8 @@ void callback(char* topic, byte* message, unsigned int length) {
   for (int i = 0; i < length; i++) {
     messageTemp += (char)message[i];
   }
+
+//  Serial.print(messageTemp);
   
   if (String(topic) == receive_code) {
     if(messageTemp == "accepted"){
