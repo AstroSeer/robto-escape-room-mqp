@@ -65,9 +65,9 @@ class Camera:
 #             self.frame = cv2.aruco.drawDetectedMarkers(self.frame, markerCorners, markerIds)           
             
             #gets perimeter of detected marker
-            if self.markerCorners:
-                aruco_size = cv2.arcLength(markerCorners[0], True)
-                print(aruco_size)
+#             if self.markerCorners:
+#                 aruco_size = cv2.arcLength(markerCorners[0], True)
+#                 print(aruco_size)
                 
 #             if(len(self.markerCorners) == 1) and (aruco_size > 100):
 #                 self.set_terminal(aruco_size)
@@ -99,6 +99,16 @@ class Camera:
     # def index():
         # """Video streaming home page."""
         # return render_template('testing.html')
+
+    def get_closest_aruco(self):
+        dist = 0
+        arucoID = 0
+        for i in self.markerIds:
+            aruco_size = cv2.arcLength(self.markerCorners[0], True)
+            if(aruco_size > dist):
+                dist = aruco_size
+                arucoID = i
+        return arucoID, dist    
 
     def set_terminal(self, aruco_size):
         if(self.terminalState is "accepted"):

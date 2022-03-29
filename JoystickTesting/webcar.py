@@ -32,7 +32,7 @@ pwm.set_pwm_freq(60)#--- add back in
 Room Setup
 """
 room_state = ""
-passcodes = {"'DoorCode'": "12345"}
+passcodes = {"'Door'": "12345"}
 promptingForPasscode = False
 
 """
@@ -350,7 +350,14 @@ peripheralUpdates = True;
 def checkState():
     global room_state, passcodes, promptingForPasscode
     if(room_state in passcodes):
-        promptingForPasscode = True
+        if(cam.markerCorners):
+            arucoId, arucoDist = cam.get_closest_aruco()
+            if(arucoDist >= 550):
+                promptingForPasscode = True
+            else:
+                promptingForPasscode = False
+        else:
+                promptingForPasscode = False      
     else:
         promptingForPasscode = False
         
@@ -371,6 +378,9 @@ def update(dt):
     
     #see if in state requiring passcode
     checkState()
+    
+    #send aruco distance to room (if any)
+
     
     #if python 3.10 or above, can use "match", works like switch statements 
     if carDir == CarDirection.NONE.value:
@@ -487,10 +497,13 @@ def recievePasscode():
         
     if(passcodeInput == passcodes[room_state]):
         data[1] = 1; #correct passcode
-        client.publish("rpi/passcode", "accepted")
     else:
         data[1] = 0; #incorrect passcode
-        client.publish("rpi/passcode", "denied")
+        
+    if(data[0]==1 and data[1]==1):
+        client.publish("rpi/passcode", "accepted")
+    else:
+        client.publish("rpi/passcode", "denied") 
     return Response(json.dumps(data), mimetype = 'text/xml')
     
      
