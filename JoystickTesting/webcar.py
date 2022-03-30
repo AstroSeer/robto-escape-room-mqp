@@ -32,8 +32,7 @@ pwm.set_pwm_freq(60)#--- add back in
 Room Setup
 """
 room_state = ""
-# passcode_states = ["Door"]
-passcodes = {"'DoorCode'": "12345"}
+passcodes = {"'Door'": "12345"}
 promptingForPasscode = False
 
 """
@@ -70,7 +69,6 @@ class CamDirection(Enum):
     LEFT = 2
     UP = 3
     DOWN = 4
-
 
 class CarDirection(Enum):
     NONE = 0
@@ -124,11 +122,6 @@ move_speed = 1350  # Max pulse length out of 4096 #--- add back in
 turn_speed = 1300 #--- add back in
 
 servo_ctr = 320 #ultrasonic sensor facing front
-
-# servo_rgt = 150 #ultrasonic sensor facing left #unneeded?? ask owen
-# servo_lft = 500 #ultrasonic sensor facing right #unneeded?? ask owen
-
-
 LRservo_cur = servo_ctr
 UDservo_cur = servo_ctr
 LRcam_servo = 15 #left/right camera servo
@@ -357,18 +350,24 @@ peripheralUpdates = True;
 def checkState():
     global room_state, passcodes, promptingForPasscode
     if(room_state in passcodes):
-        promptingForPasscode = True
+        if(cam.markerCorners):
+            arucoId, arucoDist = cam.get_closest_aruco()
+            if(arucoDist >= 550):
+                promptingForPasscode = True
+            else:
+                promptingForPasscode = False
+        else:
+                promptingForPasscode = False      
     else:
         promptingForPasscode = False
         
-def checkPasscode(inputCode):
-    global room_state, passcodes
-    if(passcodes[room_state] == inputCode):
-        client.publish("rpi/passcode", "accepted")
-    else:
-        client.publish("rpi/passcode", "denied")
+# def checkPasscode(inputCode):
+#     global room_state, passcodes
+#     if(passcodes[room_state] == inputCode):
+#         client.publish("rpi/passcode", "accepted")
+#     else:
+#         client.publish("rpi/passcode", "denied")
         
-
 def update(dt):
     #TODO: prevent race conditions with Flask app changing values of buttons and axes?? 
     #maybe just set local variables equal to what the values were at the beginning of update?
@@ -379,6 +378,9 @@ def update(dt):
     
     #see if in state requiring passcode
     checkState()
+    
+    #send aruco distance to room (if any)
+
     
     #if python 3.10 or above, can use "match", works like switch statements 
     if carDir == CarDirection.NONE.value:
@@ -495,10 +497,13 @@ def recievePasscode():
         
     if(passcodeInput == passcodes[room_state]):
         data[1] = 1; #correct passcode
-        client.publish("rpi/passcode", "accepted")
     else:
         data[1] = 0; #incorrect passcode
-        client.publish("rpi/passcode", "denied")
+        
+    if(data[0]==1 and data[1]==1):
+        client.publish("rpi/passcode", "accepted")
+    else:
+        client.publish("rpi/passcode", "denied") 
     return Response(json.dumps(data), mimetype = 'text/xml')
     
      
