@@ -52,6 +52,7 @@ client.on_connect = on_connect
 client.on_message = on_message
 client.connect(pi_ip_address)
 client.subscribe("esp32/state", 0)
+client.loop_start()
 
 import os     #importing os library so as to communicate with the system
 os.system ("sudo pigpiod") #Launching GPIO library
@@ -131,7 +132,7 @@ maxRight = 120
 maxLeft = 550
 maxUp = 210
 maxDown = 500
-step = 3#20 #how far camera servos move in one step 
+step = 5#20 #how far camera servos move in one step 
 #TODO: test lowering step value, or maybe stepping less often
 
 #initialize GPIO status variables
@@ -158,7 +159,7 @@ GPIO.setup(lightPin, GPIO.IN) #--- add back in
 
 # For Lift
 ESC=13  #Connect the ESC in this GPIO pin 
-speed = 150#TODO: adjust speed value, make slower so robot moves slower
+speed = 225 #TODO: adjust speed value, make slower so robot moves slower
 stop = 1500
 
 topLimitPin = 5
@@ -367,20 +368,15 @@ def checkState():
 #         client.publish("rpi/passcode", "accepted")
 #     else:
 #         client.publish("rpi/passcode", "denied")
-        
+   
 def update(dt):
     #TODO: prevent race conditions with Flask app changing values of buttons and axes?? 
     #maybe just set local variables equal to what the values were at the beginning of update?
     global UVToggle, flashlightToggle, magnetToggle, cam_center, buttonVals
     
-    #see if room state changed, this is not like a while loop
-    client.loop()
-    
     #see if in state requiring passcode
     checkState()
-    
-    #send aruco distance to room (if any)
-
+#     print(room_state)
     
     #if python 3.10 or above, can use "match", works like switch statements 
     if carDir == CarDirection.NONE.value:
@@ -642,6 +638,21 @@ def video_feed():
 #         return#--- only for testing
     return Response(cam.start(), mimetype='multipart/x-mixed-replace; boundary=frame') #--- add back in
         
+class MqttThread(threading.Thread):
+    global client
+    def __init__(self, event):
+        threading.Thread.__init__(self)
+        self.stopped = event
+        self.count = 0
+        client.loop_start()
+
+    def run(self):
+        if(self.count == 1000):
+            self.count = 0
+            client.loop()
+        else:
+            self.count = self.count + 1
+        
 class MyThread(threading.Thread):
     def __init__(self, event):
         global count
@@ -651,6 +662,9 @@ class MyThread(threading.Thread):
 
     def run(self):
         old_time = time.time()
+#         mqtt = MqttThread(self.stopped)
+#         mqtt.daemon=True
+#         mqtt.run()
         while not self.stopped.wait(.01):
             dt = time.time()-old_time
             update(dt)
