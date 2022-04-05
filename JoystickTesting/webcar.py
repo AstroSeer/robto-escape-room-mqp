@@ -353,7 +353,7 @@ def checkState():
     if(room_state in passcodes):
         if(cam.markerCorners):
             arucoId, arucoDist = cam.get_closest_aruco()
-            if(arucoDist >= 550):
+            if(arucoDist >= 400):
                 promptingForPasscode = True
             else:
                 promptingForPasscode = False

@@ -3,7 +3,7 @@
 #
 # This is the pi camera class. All we have to do to use
 #   it is instantiate it and call the start() method.
-from flask import Flask, render_template, Response
+# from flask import Flask, render_template, Response
 from paho.mqtt import client
 from picamera.array import PiRGBArray  #--- add back in
 from picamera import PiCamera as pc #--- add back in 
@@ -63,29 +63,33 @@ class Camera:
             
             #draws markers on camera
 #             self.frame = cv2.aruco.drawDetectedMarkers(self.frame, markerCorners, markerIds)           
-            
+#             corners = np.int0(self.markerCorners)
+#             cv2.polylines(self.frame, corners, True, (0, 255, 0), 5)
             #gets perimeter of detected marker
-#             if self.markerCorners:
-#                 aruco_size = cv2.arcLength(markerCorners[0], True)
-#                 print(aruco_size)
-                
-#             if(len(self.markerCorners) == 1) and (aruco_size > 100):
-#                 self.set_terminal(aruco_size)
+#             if(markerCorners):
+#                 aid, aruco_size = self.get_closest_aruco()
+#                 side = aruco_size/4
+#                 cv2.putText(self.frame, "Perimeter: {} px".format(round(aruco_size, 1)), (int(side), int(side)), cv2.FONT_HERSHEY_PLAIN, 2, (100,200,0), 2)
+#                 cv2.putText(self.frame, "ID: {}".format(aid), (int(side), int(2*side)), cv2.FONT_HERSHEY_PLAIN, 2, (100,200,0), 2)
+
+            aid, aruco_size = self.get_closest_aruco()    
+            if(len(self.markerCorners) == 1) and (aruco_size > 100):
+                self.set_terminal(aruco_size)
                  
 
             #makes image bigger
 #             self.frame = self.rescale(self.frame, 70) 
             
             #displays frame
-#             cv2.imshow("Frame", self.frame)
+            cv2.imshow("Frame", self.frame)
             #saves frame
-        #     cv2.imwrite("led_test.jpg", rotated_img)
-            success, buffer = cv2.imencode('.jpg', self.frame)
-            fram = buffer.tobytes()
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + fram + b'\r\n')  # concat frame one by one and show result
-            #if cv2.waitKey(1) == ord('q'):
-             #   break
+            cv2.imwrite("poster_pic.jpg", self.frame)
+#             success, buffer = cv2.imencode('.jpg', self.frame)
+#             fram = buffer.tobytes()
+#             yield (b'--frame\r\n'
+#                    b'Content-Type: image/jpeg\r\n\r\n' + fram + b'\r\n')  # concat frame one by one and show result
+            if cv2.waitKey(1) == ord('q'):
+                break
         self.video.release()
         cv2.destroyAllWindows()
     
@@ -116,7 +120,7 @@ class Camera:
         elif(self.terminalState is "denied"):
             terminal_status = "Password Denied"#cv2.imread("terminal/PWD_BAD2.png")
         else:
-            terminal_status = 'Enter Password'#cv2.imread("terminal/PWD_START.png")
+            terminal_status = "Enter'\n'Password"#cv2.imread("terminal/PWD_START.png")
 
 
         index = np.squeeze(np.where(self.markerIds==0))
@@ -126,10 +130,10 @@ class Camera:
         refPt4 = np.squeeze(self.markerCorners[index[0]])[3]
 
         scaling_factor = 6
-        pts_dst = [[refPt1[0]-aruco_size/scaling_factor, refPt1[1]],
-                   [refPt2[0]+aruco_size/scaling_factor, refPt2[1]],
-                   [refPt3[0]+aruco_size/scaling_factor, refPt3[1]],
-                   [refPt4[0]-aruco_size/scaling_factor, refPt4[1]]]
+        pts_dst = [[refPt1[0]-aruco_size/scaling_factor, refPt1[1]-aruco_size/scaling_factor],
+                   [refPt2[0]+aruco_size/scaling_factor, refPt2[1]-aruco_size/scaling_factor],
+                   [refPt3[0]+aruco_size/scaling_factor, refPt3[1]+aruco_size/scaling_factor],
+                   [refPt4[0]-aruco_size/scaling_factor, refPt4[1]+aruco_size/scaling_factor]]
 
         pts_dst_m = np.array(pts_dst)
         cv2.fillPoly(self.frame, np.int32([pts_dst_m]), (0,0,0))
@@ -138,7 +142,8 @@ class Camera:
         textSize = cv2.getTextSize(terminal_status, font, 1,2)[0]
         poly_center = np.int32([refPt1[0], # + np.round((refPt2[0]-refPt1[0])/2)) + textSize[0])/2,
                                 refPt1[1]])# + np.round((refPt4[1]-refPt1[1])/2)) + textSize[1])/2])
-        cv2.putText(self.frame, terminal_status, poly_center, font, 0.5, (0,255,0), 2, cv2.LINE_AA)
+        cv2.putText(self.frame, "ENTER", np.int32([refPt1[0], refPt1[1]+5]), font, 0.5, (0,255,0), 2, cv2.LINE_AA)
+        cv2.putText(self.frame, "PASSWORD", np.int32([refPt1[0]-17, refPt1[1]+25]), font, 0.5, (0,255,0), 2, cv2.LINE_AA)
         
 #         # Calculate Homography
 #         h, status = cv2.findHomography(pts_src_m, pts_dst_m)
@@ -165,5 +170,5 @@ class Camera:
 #         self.frame = cv2.add(warped_image, self.frame)
 
     
-# c = Camera()
-# c.start()
+c = Camera()
+c.start()
