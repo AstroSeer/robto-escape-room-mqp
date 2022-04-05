@@ -60,8 +60,10 @@ Servo door2;
 
 /* Servo Variables */
 int pos = 0;
-const int servo1Pin = 14;
-const int servo2Pin = 12;
+const int T_Door1Pin = 14;
+const int T_Door2Pin = 12;
+const int P_C1Pin = 19;
+const int P_C2Pin = 22;
 
 int up1 = 40;
 int down1 = 150;
@@ -74,7 +76,7 @@ const int G_GoodBlockDockPin = 1;   //CHANGE
 const int G_BadBlockDockPin = 2;    //CHANGE
 
 /* Pressure Plate Variables */
-const int P_PressurePlatePin = 3;   //CHANGE
+const int P_PressurePlatePin = 21;   
 
 /* IR Variables */
 const int irPin = 33; // 1100 no robot, < 1400 robot detected
@@ -93,8 +95,9 @@ static unsigned int greenState = G_BD;
 static unsigned int prevState;
 static unsigned int nextState;
 
-bool tutorial = true;
-bool main_room = false;
+//swap values for testing
+bool tutorial = false;
+bool main_room = true;
 bool passcodeAccepted = false;
 
 /* Turns enumerated state into string; to display to esp */
@@ -104,13 +107,19 @@ char* get_state(unsigned int state){
 }
 
 char* get_sideStates(unsigned int purp_state, unsigned int grn_state){
-  char* retVal = "";
-  char* retPurpState[] = {"P_PP", "P_C1", "P_C2", "P_End"}; //add more states (in order of enumeration)...
-  char* retGrnState[] = {"G_BD", "G_C1", "G_C2", "G_End"};
+  String retVal = "";
+  String retPurpState[] = {"P_PP", "P_C1", "P_C2", "P_End"}; //add more states (in order of enumeration)...
+  String retGrnState[] = {"G_BD", "G_C1", "G_C2", "G_End"};
 
-  retVal = strcat(retPurpState[purp_state], " + ");
-  retVal = strcat(retVal, retGrnState[grn_state]);
-  return retVal;
+  retVal.concat(retPurpState[purp_state]);
+  retVal.concat(" + ");
+  retVal.concat(retGrnState[grn_state]);
+
+  Serial.println(retVal);
+  
+  char* charRetVal = NULL;
+  retVal.toCharArray(charRetVal, 100);
+  return charRetVal;
 }
 
 void setup() {
@@ -128,14 +137,15 @@ void setup() {
   /* Servo setup  */
   door1.setPeriodHertz(50);    // standard 50 hz servo
   door2.setPeriodHertz(50);    // standard 50 hz servo
-  door1.attach(servo1Pin, 400, 2600); // attaches the servo on pin 18 to the servo object
-  door2.attach(servo2Pin, 400, 2600); // attaches the servo on pin 18 to the servo object
+  door1.attach(T_Door1Pin, 400, 2600); // attaches the servo on pin 18 to the servo object
+  door2.attach(T_Door2Pin, 400, 2600); // attaches the servo on pin 18 to the servo object
 
   /* Room Puzzle Stuff Setup */
   pinMode(T_BlockDockPin, INPUT_PULLUP);
-  pinMode(G_GoodBlockDockPin, INPUT_PULLUP);
-  pinMode(G_BadBlockDockPin, INPUT_PULLUP);
-
+//  pinMode(G_GoodBlockDockPin, INPUT_PULLUP);
+//  pinMode(G_BadBlockDockPin, INPUT_PULLUP);
+  pinMode(P_PressurePlatePin, INPUT_PULLUP);
+  
   pinMode(prevStateBtn, INPUT_PULLUP);
   pinMode(nextStateBtn, INPUT_PULLUP);
 
@@ -165,11 +175,10 @@ void prepare(void){
 /* Refreshes LCD screen to current state */
 void display_lcd(char* state){
   u8g2.clearBuffer();            // clear the complete internal memory
-  text = state;
   u8g2.setFont(u8g2_font_courB12_tr);   // set the target font
   u8g2.drawUTF8(pixel_area_x_pos, 
     pixel_area_y_pos+pixel_area_height+u8g2.getDescent()-1, 
-    text);                // draw the scolling text
+    state);                // draw the scolling text
   
   // now only update the selected area, the rest of the display content is not changed
   u8g2.updateDisplayArea(tile_area_x_pos, tile_area_y_pos, tile_area_width, tile_area_height);
@@ -193,7 +202,7 @@ bool checkBlockDock() {
   if(tutorial){
     if (digitalRead(T_BlockDockPin) == LOW) {return true;}
   }if(main_room){
-    if (digitalRead(G_GoodBlockDockPin) == LOW) {return true;}
+    if (digitalRead(G_GoodBlockDockPin) == HIGH) {return true;}
   }
   else {return false;}
 }
@@ -273,14 +282,16 @@ void handleProgress(){
 
 void loop() {
   FastLED.show(); //display current LED state
-  check_connection();
+//  check_connection();
   if(main_room){
     char* state_msg = get_sideStates(purpleState, greenState);
-    pub(room_state, state_msg);
-    display_lcd(state_msg);
+//    pub(room_state, state_msg);
+    Serial.println(state_msg);
+    Serial.println(purpleState);
+//    display_lcd(state_msg);
   }else{
    char* state_msg = get_state(state);
-   pub(room_state, state_msg);
+//   pub(room_state, state_msg);
    display_lcd(state_msg);
   }
   
@@ -290,8 +301,8 @@ void loop() {
   checkStateButtons();  
   
   if(main_room){
-    if (checkBlockDock())         handleBlockDock();
-    if (checkPressurePlate())     handlePressurePlate();
+//    if (checkBlockDock())         handleBlockDock();
+//    if (checkPressurePlate())     handlePressurePlate();
     if (checkCorrectPasscode())   handleCorrectPasscode();
     if (checkProgress())          handleProgress();
   
