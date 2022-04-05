@@ -51,7 +51,7 @@ ul {
 <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-	<link rel="stylesheet" type="text/css" href= "{{ url_for('static',filename='styles/style.css') }}"><!--"style.css">-->
+	<link rel="stylesheet" type="text/css" href= "{{ url_for('static',filename='styles/style.css') }}">><!--"style.css"-->
 
 <title>Robot Escape Room MQP</title>
 </head>
@@ -71,10 +71,16 @@ ul {
 
     </script> -->
 
-<label for="Timer">60:00</label>
+<label1 for="Timer">60:00</label1>
 <h1>Escape with Robto</h1>
 <p id="demo"></p>
-
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8  offset-lg-2">
+            <img src="video_feed" width="50%"><!--width="100%"><!--multipart/x-mixed-replace; boundary=frame-->
+        </div>
+    </div>
+</div>
 
 <!--<h1>My First Heading</h1>
 <p>My first paragraph.</p>
@@ -164,21 +170,11 @@ ul {
 <!--<button id="button3" style="display:none;" onclick="document.getElementById('button1').style.display = 'block'; this.style.display = 'none';">Button 3</button>-->
 
 
-
-<p id = "para">My first paragraph.</p>
 <p id = "debugCodePromptInfo"></p>
 <br>
 <p id = "messageBox"></p>
 <br><br><br><br>
 <button id = "debugMode" onclick="toggleDebug()">ToggleDebug</button>
-
-<div class="container">
-    <div class="row">
-        <div class="col-lg-8  offset-lg-2">
-            <img src="video_feed" width="50%"><!--width="100%"><!--multipart/x-mixed-replace; boundary=frame-->
-        </div>
-    </div>
-</div>
 
 <p>Hints:</p>
 <script>
