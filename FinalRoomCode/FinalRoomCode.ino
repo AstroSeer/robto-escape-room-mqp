@@ -14,11 +14,11 @@
 
 /* LED stuff */
 //#define numDoorLed 1
-#define numBlockDockLed 1
+#define numRoomLed 1
 //#define doorDataPin 32
 #define blockDockDataPin 5
 //CRGB doorLed[numDoorLed];
-CRGB dockLed[numBlockDockLed];
+CRGB roomLED[numRoomLed];
 
 /* MQTT Stuff */
 const char *ssid = "WPI-Open";
@@ -57,33 +57,44 @@ const int nextStateBtn = 36;
 /* Establish Servos */
 Servo door1;
 Servo door2;
+Servo pur_c1;
+Servo pur_c2;
+Servo grn_c1;
+Servo grn_c2;
+Servo final_c;
 
 /* Servo Variables */
-int pos = 0;
 const int T_Door1Pin = 14;
 const int T_Door2Pin = 12;
 const int P_C1Pin = 19;
-const int P_C2Pin = 22;
+const int P_C2Pin = 23;
+const int G_C1Pin = 17;
+const int G_C2Pin = 2;
 
-int up1 = 40;
-int down1 = 150;
-int up2 = 160;
-int down2 = 40;
+
+const int up1 = 40;
+const int down1 = 150;
+const int up2 = 160;
+const int down2 = 40;
+
+const int openCabP1 = 145;
+const int closeCabP1 = 55;
+const int openCabG1 = 150;
+const int closeCabG1 = 60;
+//untested variables
+const int openCabP2 = 145;
+const int closeCabP2 = 55;
+const int openCabG2 = 145;
+const int closeCabG2 = 55;
+const int openCabFinal = 145;
+const int closeCabFinal = 55;
 
 /* Block Dock Variables */
 const int T_BlockDockPin = 27;
-const int G_GoodBlockDockPin = 1;   //CHANGE
-const int G_BadBlockDockPin = 2;    //CHANGE
+const int G_GoodBlockDockPin = 18;
 
 /* Pressure Plate Variables */
-const int P_PressurePlatePin = 21;   
-
-/* IR Variables */
-const int irPin = 33; // 1100 no robot, < 1400 robot detected
-float doorThreshold = 2000;
-float irDistance;
-const int numIRReadings = 50;
-int totalIR;
+const int P_PressurePlatePin = 22;   
 
 /* Room States */
 enum T_ROOM {T_S, T_BD, T_Door, T_End, M_FinalC, M_End};  //ADD NEW STATES TO get_state() METHOD
@@ -115,10 +126,8 @@ char* get_sideStates(unsigned int purp_state, unsigned int grn_state){
   retVal.concat(" + ");
   retVal.concat(retGrnState[grn_state]);
 
-  Serial.println(retVal);
-  
-  char* charRetVal = NULL;
-  retVal.toCharArray(charRetVal, 100);
+  char* charRetVal = (char*) malloc((retVal.length()+1)*sizeof(String));
+  retVal.toCharArray(charRetVal, retVal.length()+1);
   return charRetVal;
 }
 
@@ -140,10 +149,18 @@ void setup() {
   door1.attach(T_Door1Pin, 400, 2600); // attaches the servo on pin 18 to the servo object
   door2.attach(T_Door2Pin, 400, 2600); // attaches the servo on pin 18 to the servo object
 
+  pur_c1.setPeriodHertz(50);  
+  pur_c1.attach(P_C1Pin, 400, 2600);
+  pur_c2.setPeriodHertz(50);  
+  pur_c2.attach(P_C2Pin, 400, 2600);
+  grn_c1.setPeriodHertz(50);  
+  grn_c1.attach(G_C1Pin, 400, 2600);
+  grn_c2.setPeriodHertz(50);  
+  grn_c2.attach(G_C2Pin, 400, 2600);
+
   /* Room Puzzle Stuff Setup */
   pinMode(T_BlockDockPin, INPUT_PULLUP);
-//  pinMode(G_GoodBlockDockPin, INPUT_PULLUP);
-//  pinMode(G_BadBlockDockPin, INPUT_PULLUP);
+  pinMode(G_GoodBlockDockPin, INPUT_PULLUP);
   pinMode(P_PressurePlatePin, INPUT_PULLUP);
   
   pinMode(prevStateBtn, INPUT_PULLUP);
@@ -151,9 +168,9 @@ void setup() {
 
   /* Room LED Setup */
   //FastLED.addLeds<NEOPIXEL, doorDataPin>(doorLed, numDoorLed);
-  FastLED.addLeds<NEOPIXEL, blockDockDataPin>(dockLed, numBlockDockLed);
+  FastLED.addLeds<NEOPIXEL, blockDockDataPin>(roomLED, numRoomLed);
   //doorLed[0] = CRGB::Blue;
-  dockLed[0] = CRGB::Blue;//startup color
+  roomLED[0] = CRGB::Blue;//startup color
 
   /* Starts ESP LCD */
   u8g2.begin();
@@ -165,7 +182,7 @@ void prepare(void){
   u8g2.clearBuffer();          // clear the internal memory
   u8g2.setFont(u8g2_font_helvR10_tr); // choose a suitable font
   u8g2.drawStr(22,15,"Current State");  // write something to the internal memory
-  u8g2.drawBox(pixel_area_x_pos-1, pixel_area_y_pos-1, pixel_area_width+2, pixel_area_height+2);
+  u8g2.drawBox(pixel_area_x_pos-3, pixel_area_y_pos-1, pixel_area_width+6, pixel_area_height+2);
   u8g2.sendBuffer();          // transfer internal memory to the display
   u8g2.setFont(u8g2_font_courB14_tr); // set the target font for the text width calculation
   width = u8g2.getUTF8Width(text);    // calculate the pixel width of the text
@@ -175,13 +192,13 @@ void prepare(void){
 /* Refreshes LCD screen to current state */
 void display_lcd(char* state){
   u8g2.clearBuffer();            // clear the complete internal memory
-  u8g2.setFont(u8g2_font_courB12_tr);   // set the target font
-  u8g2.drawUTF8(pixel_area_x_pos, 
+  u8g2.setFont(u8g2_font_courB10_tr);   // set the target font
+  u8g2.drawUTF8(pixel_area_x_pos-2, 
     pixel_area_y_pos+pixel_area_height+u8g2.getDescent()-1, 
     state);                // draw the scolling text
   
   // now only update the selected area, the rest of the display content is not changed
-  u8g2.updateDisplayArea(tile_area_x_pos, tile_area_y_pos, tile_area_width, tile_area_height);
+  u8g2.updateDisplayArea(tile_area_x_pos-2, tile_area_y_pos, tile_area_width+4, tile_area_height);
       
   delay(10);              // do some small delay
 }
@@ -197,18 +214,70 @@ void doorControl(bool openDoor) {
   }
 }
 
+/* True input opens cabinet, false closes */
+void cabinetControl(bool cabinetState){
+  if(tutorial){
+    if(state == M_FinalC){
+      int curServo = final_c.read();
+      if (cabinetState) {final_c.write(openCabFinal);} 
+      else {final_c.write(closeCabFinal);}
+    }
+  }if(main_room){
+    if(purpleState == P_C1){
+      if (cabinetState) {
+        pur_c1.write(openCabP1);
+        purpleState = P_C2;
+      }else {pur_c1.write(closeCabP1);}
+    }
+    else if(purpleState == P_C2){
+      int curServo = pur_c2.read();
+      if (cabinetState) {pur_c2.write(openCabP2);} 
+      else {pur_c2.write(closeCabP2);}
+    }
+    if(greenState == G_C1) {
+      int curServo = grn_c1.read();
+      if (cabinetState) {
+        grn_c1.write(openCabG1);
+        greenState = G_C2;
+      }else {grn_c1.write(closeCabG1);}
+    }
+    else if(greenState == G_C2) {
+      int curServo = grn_c2.read();
+      if (cabinetState) {grn_c2.write(openCabG2);} 
+      else {grn_c2.write(closeCabG2);}
+    }
+  }
+}
+
 /* Return true when a block is detected */
 bool checkBlockDock() {
   if(tutorial){
     if (digitalRead(T_BlockDockPin) == LOW) {return true;}
   }if(main_room){
-    if (digitalRead(G_GoodBlockDockPin) == HIGH) {return true;}
+    if (digitalRead(G_GoodBlockDockPin) == LOW) {return true;}
+    else{
+      if(greenState != G_BD){
+        roomLED[0] = CRGB::Red;
+        greenState = G_C1;
+        cabinetControl(false);
+      }
+      greenState = G_BD;
+      return false;
+    }
   }
   else {return false;}
 }
 
 bool checkPressurePlate() {
   if (digitalRead(P_PressurePlatePin) == LOW) {return true;}
+  else{
+    if(purpleState != P_PP){
+      purpleState = P_C1;
+      cabinetControl(false);
+    }
+    purpleState = P_PP;
+    return false;
+  }
 }
 
 bool checkCorrectPasscode(){
@@ -216,6 +285,8 @@ bool checkCorrectPasscode(){
 }
 
 bool checkProgress(){
+  if(purpleState == P_End){roomLED[3] = CRGB::Green;}
+  if(greenState == G_End){roomLED[2] = CRGB::Green;}
   return (purpleState == P_End && greenState == G_End);
 }
 
@@ -252,32 +323,49 @@ bool checkStateButtons(){
 void handleBlockDock() {
   if(tutorial){
     if(state == T_BD) state = T_Door;
-    dockLed[0] = CRGB::Green; //update led color
   }if(main_room){
-    if(greenState == G_BD) greenState = G_C1;
+    if(greenState == G_BD){
+      roomLED[0] = CRGB::Green; //update led color
+      greenState = G_C1;
+      cabinetControl(true);
+    }
   }
 }
 void handlePressurePlate() {
   if(tutorial){
   }if(main_room){
-    if(purpleState == P_PP) purpleState = P_C1;
+    if(purpleState == P_PP) {
+      purpleState = P_C1;
+      cabinetControl(true);
+    }
   }
 }
 
 void handleCorrectPasscode(){
+  cabinetControl(true);
   if(tutorial){
-    if(state == T_Door) state = T_End;
+    if(state == T_Door)   state = T_End;
+    if(state == M_FinalC) state = M_End;
   }if(main_room){
-    if(purpleState == P_C1) purpleState = P_C2;
     if(purpleState == P_C2) purpleState = P_End;
-    if(greenState == G_C1) greenState = G_C2;
     if(greenState == G_C2) greenState = G_End;  
   }
+  passcodeAccepted = false;
 }
 
 void handleProgress(){
+//  if(tutorial){
   if(state == T_End) state = M_FinalC;
+  tutorial = true;
   main_room = false;
+////  }else{
+//    if(purpleState == P_End){roomLED[3] = CRGB::Green;}
+//    if(greenState == G_End){roomLED[2] = CRGB::Green;}
+//    if(purpleState == P_End && greenState == G_End){
+//      tutorial = true;
+//      main_room = false;    
+//    }
+//  }
 }
 
 void loop() {
@@ -286,9 +374,9 @@ void loop() {
   if(main_room){
     char* state_msg = get_sideStates(purpleState, greenState);
 //    pub(room_state, state_msg);
-    Serial.println(state_msg);
-    Serial.println(purpleState);
-//    display_lcd(state_msg);
+//    Serial.println(state_msg);
+    display_lcd(state_msg);
+    free(state_msg);
   }else{
    char* state_msg = get_state(state);
 //   pub(room_state, state_msg);
@@ -299,13 +387,12 @@ void loop() {
 //enum P_SIDE {P_PP, P_C1, P_C2, P_Done};
 //enum G_SIDE {G_BD, G_C1, G_C2, G_Done};
   checkStateButtons();  
-  
+
   if(main_room){
-//    if (checkBlockDock())         handleBlockDock();
-//    if (checkPressurePlate())     handlePressurePlate();
+    if (checkBlockDock())         handleBlockDock();
+    if (checkPressurePlate())     handlePressurePlate();
     if (checkCorrectPasscode())   handleCorrectPasscode();
     if (checkProgress())          handleProgress();
-  
   }else{
     if (checkBlockDock())         handleBlockDock();
     if (checkCorrectPasscode())   handleCorrectPasscode();
@@ -314,11 +401,14 @@ void loop() {
       case T_S:
         doorControl(false);     //close door
         delay(1000);
+        roomLED[0] = CRGB::Red; //set color to red
+        roomLED[1] = CRGB::Red; //set color to red
+        roomLED[2] = CRGB::Red; //set color to red
+        roomLED[3] = CRGB::Red; //set color to red
         state = T_BD;
         break;
   
       case T_BD:
-        dockLed[0] = CRGB::Red; //set color to red
         break;
   
       case T_Door:
@@ -326,7 +416,6 @@ void loop() {
         break;
   
       case T_End:
-        passcodeAccepted = false; //reset boolean
         doorControl(true); //open door
         main_room = true;
         tutorial = false;
@@ -335,7 +424,7 @@ void loop() {
         break;
         
       case M_FinalC:
-        if (checkCorrectPasscode())   handleCorrectPasscode();        
+//        if (checkCorrectPasscode())   handleCorrectPasscode();        
         break;
         
       case M_End:
