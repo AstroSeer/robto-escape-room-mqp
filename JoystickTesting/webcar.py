@@ -22,7 +22,7 @@ import RPi.GPIO as GPIO #--- add back in
 from enum import Enum
 import paho.mqtt.client as mqtt
 
-pi_ip_address='130.215.172.60'#'localhost'
+pi_ip_address='130.215.208.193'#'localhost'
 
 # Initialise the PCA9685 using the default address (0x40).
 pwm = Adafruit_PCA9685.PCA9685() #--- add back in
@@ -32,7 +32,10 @@ pwm.set_pwm_freq(60)#--- add back in
 Room Setup
 """
 room_state = ""
-passcodes = {"'Door'": "12345"}
+curr_id = ''
+passcodes = {"[0]": "12345", "[1]": "dog", "[2]": "cat", "[3]": "moose"}
+state_ids = {"[0]": "'T_Door'", "[1]": ["'P_C2 + G_BD'", "'P_C2 + G_C2'", "'P_C2 + G_End'"],
+             "[2]": ["'P_PP + G_C2'", "'P_C2 + G_C2'", "'P_End + G_C2'"], "[3]": "'M_FinalC'",}
 promptingForPasscode = False
 
 """
@@ -349,12 +352,17 @@ peripheralUpdates = True;
 #waitingForUpdates = False;
 
 def checkState():
-    global room_state, passcodes, promptingForPasscode
-    if(room_state in passcodes):
-        if(cam.markerCorners):
-            arucoId, arucoDist = cam.get_closest_aruco()
-            if(arucoDist >= 550):
-                promptingForPasscode = True
+    global room_state, passcodes, promptingForPasscode, state_ids, curr_id
+    if(cam.markerCorners):
+        arucoId, arucoDist = cam.get_closest_aruco()
+        curr_id = arucoId
+#         print(round(arucoDist,1), room_state)
+        if(arucoDist >= 550):
+            if(curr_id in passcodes):
+                statesWithId = state_ids.get(curr_id)
+                if(room_state in statesWithId):
+                    print(True)
+                    promptingForPasscode = True
             else:
                 promptingForPasscode = False
         else:
@@ -481,7 +489,7 @@ import json
 
 @app.route("/sendPasscode")
 def recievePasscode():
-    global room_state, passcodes, promptingForPasscode
+    global room_state, passcodes, promptingForPasscode, curr_id
     passcodeInput = request.args.get('passcode');
     print(passcodeInput);
     data = [0,0];
@@ -491,7 +499,7 @@ def recievePasscode():
     else:
         data[0] = 0;#not looking for passcode
         
-    if(passcodeInput == passcodes[room_state]):
+    if(passcodeInput == passcodes[curr_id]):
         data[1] = 1; #correct passcode
     else:
         data[1] = 0; #incorrect passcode

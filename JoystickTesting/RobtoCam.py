@@ -107,7 +107,7 @@ class Camera:
             aruco_size = cv2.arcLength(self.markerCorners[0], True)
             if(aruco_size > dist):
                 dist = aruco_size
-                arucoID = i
+                arucoID = str(i)
         return arucoID, dist    
 
     def set_terminal(self, aruco_size):
