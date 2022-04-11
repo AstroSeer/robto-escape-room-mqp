@@ -14,7 +14,7 @@
 
 /* LED stuff */
 //#define numDoorLed 1
-#define numRoomLed 1
+#define numRoomLed 4
 //#define doorDataPin 32
 #define blockDockDataPin 5
 //CRGB doorLed[numDoorLed];
@@ -24,7 +24,7 @@ CRGB roomLED[numRoomLed];
 const char *ssid = "WPI-Open";
 const char *password = NULL;
 const char *ID = "esp_boi";  // Name of our device, must be unique
-IPAddress broker(130, 215, 172, 60); // IP address of your MQTT broker eg. 192.168.1.50
+IPAddress broker(130, 215, 208, 193); // IP address of your MQTT broker eg. 192.168.1.50
 WiFiClient wclient;
 PubSubClient client(wclient); // Setup MQTT client
 
@@ -82,10 +82,10 @@ const int closeCabP1 = 55;
 const int openCabG1 = 150;
 const int closeCabG1 = 60;
 //untested variables
-const int openCabP2 = 145;
+const int openCabP2 = 160;
 const int closeCabP2 = 55;
-const int openCabG2 = 145;
-const int closeCabG2 = 55;
+const int openCabG2 = 70;
+const int closeCabG2 = 120;
 const int openCabFinal = 145;
 const int closeCabFinal = 55;
 
@@ -110,6 +110,8 @@ static unsigned int nextState;
 bool tutorial = false;
 bool main_room = true;
 bool passcodeAccepted = false;
+bool P_C2open = false;
+bool G_C2open = false;
 
 /* Turns enumerated state into string; to display to esp */
 char* get_state(unsigned int state){
@@ -170,7 +172,11 @@ void setup() {
   //FastLED.addLeds<NEOPIXEL, doorDataPin>(doorLed, numDoorLed);
   FastLED.addLeds<NEOPIXEL, blockDockDataPin>(roomLED, numRoomLed);
   //doorLed[0] = CRGB::Blue;
+//  closeAllCabinets();
   roomLED[0] = CRGB::Blue;//startup color
+  roomLED[1] = CRGB::Blue;//startup color
+  roomLED[2] = CRGB::Blue;//startup color
+  roomLED[3] = CRGB::Blue;//startup color
 
   /* Starts ESP LCD */
   u8g2.begin();
@@ -214,11 +220,18 @@ void doorControl(bool openDoor) {
   }
 }
 
+void closeAllCabinets(){
+  pur_c1.write(closeCabP1);
+  pur_c2.write(closeCabP2);
+  grn_c1.write(closeCabG1);
+  grn_c2.write(closeCabG2);
+//  final_c.write(closeCabFinal);
+}
+
 /* True input opens cabinet, false closes */
 void cabinetControl(bool cabinetState){
   if(tutorial){
     if(state == M_FinalC){
-      int curServo = final_c.read();
       if (cabinetState) {final_c.write(openCabFinal);} 
       else {final_c.write(closeCabFinal);}
     }
@@ -230,21 +243,30 @@ void cabinetControl(bool cabinetState){
       }else {pur_c1.write(closeCabP1);}
     }
     else if(purpleState == P_C2){
-      int curServo = pur_c2.read();
-      if (cabinetState) {pur_c2.write(openCabP2);} 
-      else {pur_c2.write(closeCabP2);}
+      if (cabinetState) {
+        pur_c2.write(openCabP2);
+        P_C2open = true;
+      } 
+      else {
+        pur_c2.write(closeCabP2);
+        P_C2open = false;
+      }
     }
-    if(greenState == G_C1) {
-      int curServo = grn_c1.read();
+    else if(greenState == G_C1) {
       if (cabinetState) {
         grn_c1.write(openCabG1);
         greenState = G_C2;
       }else {grn_c1.write(closeCabG1);}
     }
     else if(greenState == G_C2) {
-      int curServo = grn_c2.read();
-      if (cabinetState) {grn_c2.write(openCabG2);} 
-      else {grn_c2.write(closeCabG2);}
+      if (cabinetState) {
+        grn_c2.write(openCabG2);
+        G_C2open = true;
+      } 
+      else {
+        grn_c2.write(closeCabG2);
+        G_C2open = false;
+      }
     }
   }
 }
@@ -290,6 +312,11 @@ bool checkProgress(){
   return (purpleState == P_End && greenState == G_End);
 }
 
+void checkPasscodeCabinets(){
+  if(P_C2open && purpleState == P_C2) purpleState = P_End;
+  if(G_C2open && greenState == G_C2) greenState = G_End;
+}
+
 bool checkStateButtons(){
   if(main_room){
     if (digitalRead(prevStateBtn)==HIGH) {
@@ -297,6 +324,9 @@ bool checkStateButtons(){
         purpleState = purpleState - 1;
       }if(greenState != G_BD){
         greenState = greenState - 1;
+      }else if(purpleState == P_PP && greenState == G_BD){
+        tutorial = true;
+        main_room = false;
       }
     }
     else if (digitalRead(nextStateBtn)==HIGH) {
@@ -304,15 +334,24 @@ bool checkStateButtons(){
         purpleState = purpleState + 1;
       }if(greenState != G_End){
         greenState = greenState + 1;
+      }else if(purpleState == P_End && greenState == G_End){
+        tutorial = true;
+        main_room = false;
       }
     }
   }else{
     if (digitalRead(prevStateBtn)==HIGH){
-      if(state != T_BD){
+      if(state == M_FinalC){
+        tutorial = false;
+        main_room = true;
+      }if(state != T_BD){
         state = state - 1;
       }
     }else if (digitalRead(nextStateBtn)==HIGH){
-      if(state != M_End){
+      if(state == T_End){
+        tutorial = false;
+        main_room = true;
+      }if(state != M_End){
         state = state + 1;
       }
     }
@@ -347,39 +386,36 @@ void handleCorrectPasscode(){
     if(state == T_Door)   state = T_End;
     if(state == M_FinalC) state = M_End;
   }if(main_room){
-    if(purpleState == P_C2) purpleState = P_End;
-    if(greenState == G_C2) greenState = G_End;  
+    if(purpleState == P_C2){
+      pur_c1.write(closeCabP1);
+      purpleState = P_End;
+    }
+    if(greenState == G_C2){
+      grn_c2.write(closeCabG1);
+      greenState = G_End;  
+    }
   }
   passcodeAccepted = false;
 }
 
 void handleProgress(){
-//  if(tutorial){
-  if(state == T_End) state = M_FinalC;
+  state = M_FinalC;
   tutorial = true;
   main_room = false;
-////  }else{
-//    if(purpleState == P_End){roomLED[3] = CRGB::Green;}
-//    if(greenState == G_End){roomLED[2] = CRGB::Green;}
-//    if(purpleState == P_End && greenState == G_End){
-//      tutorial = true;
-//      main_room = false;    
-//    }
-//  }
 }
 
 void loop() {
   FastLED.show(); //display current LED state
-//  check_connection();
+  check_connection();
   if(main_room){
     char* state_msg = get_sideStates(purpleState, greenState);
-//    pub(room_state, state_msg);
+    pub(room_state, state_msg);
 //    Serial.println(state_msg);
     display_lcd(state_msg);
     free(state_msg);
   }else{
    char* state_msg = get_state(state);
-//   pub(room_state, state_msg);
+   pub(room_state, state_msg);
    display_lcd(state_msg);
   }
   
@@ -393,6 +429,7 @@ void loop() {
     if (checkPressurePlate())     handlePressurePlate();
     if (checkCorrectPasscode())   handleCorrectPasscode();
     if (checkProgress())          handleProgress();
+    checkPasscodeCabinets();
   }else{
     if (checkBlockDock())         handleBlockDock();
     if (checkCorrectPasscode())   handleCorrectPasscode();
@@ -443,9 +480,11 @@ void sub(const char* topic){
 }
 
 void reconnect() {
+  char* recn = "connecting...";
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
     // Attempt to connect
+    display_lcd(recn);
     if (client.connect(ID)) {
       //Write ALL Subscribers
       sub(receive_code);
