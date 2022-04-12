@@ -69,8 +69,8 @@ class Camera:
 #             if(markerCorners):
 #                 aid, aruco_size = self.get_closest_aruco()
 #                 side = aruco_size/4
-#                 cv2.putText(self.frame, "Perimeter: {} px".format(round(aruco_size, 1)), (int(side), int(side)), cv2.FONT_HERSHEY_PLAIN, 2, (100,200,0), 2)
-#                 cv2.putText(self.frame, "ID: {}".format(aid), (int(side), int(2*side)), cv2.FONT_HERSHEY_PLAIN, 2, (100,200,0), 2)
+#                 cv2.putText(self.frame, "Perimeter: {} px".format(round(aruco_size, 1)), (int(25), int(35)), cv2.FONT_HERSHEY_PLAIN, 2, (100,200,0), 2)
+#                 cv2.putText(self.frame, "ID: {}".format(aid), (int(25), int(80)), cv2.FONT_HERSHEY_PLAIN, 2, (100,200,0), 2)
 
             aid, aruco_size = self.get_closest_aruco()    
             if(len(self.markerCorners) == 1) and (aruco_size > 100):
