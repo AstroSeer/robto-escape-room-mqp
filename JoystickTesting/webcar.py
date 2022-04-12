@@ -124,7 +124,7 @@ IN4 = 22 #--- add back in
 ENA = 0  #Right motor speed PCA9685 port 0 #--- add back in
 ENB = 1  #Left motor speed PCA9685 port 1 #--- add back in
 move_speed = 1350  # Max pulse length out of 4096 #--- add back in
-turn_speed = 1300 #--- add back in
+turn_speed = 1450 #--- add back in
 
 servo_ctr = 320 #ultrasonic sensor facing front
 LRservo_cur = servo_ctr
@@ -380,11 +380,12 @@ def checkPasscode():
         correctPasscode = False
 #     else:
 #         client.publish("rpi/passcode", "denied")
-   
+
+camStepCount = 0
 def update(dt):
     #TODO: prevent race conditions with Flask app changing values of buttons and axes?? 
     #maybe just set local variables equal to what the values were at the beginning of update?
-    global UVToggle, flashlightToggle, magnetToggle, cam_center, buttonVals
+    global UVToggle, flashlightToggle, magnetToggle, cam_center, buttonVals, camStepCount
     
     #see if in state requiring passcode
     checkState()
@@ -424,6 +425,10 @@ def update(dt):
         centerCam()
     else:
         turnCam()
+#         if(camStepCount>=3  ):
+#             camStepCount = 0
+#             turnCam()
+#         camStepCount += 1 
     
 #     cam.set_terminal("default")
     #TODO: use button enums for the following, rather than hardcoded numbers 
