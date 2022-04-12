@@ -22,7 +22,7 @@ import RPi.GPIO as GPIO #--- add back in
 from enum import Enum
 import paho.mqtt.client as mqtt
 
-pi_ip_address='130.215.208.193'#'localhost'
+pi_ip_address='130.215.120.229'#'localhost'
 
 # Initialise the PCA9685 using the default address (0x40).
 pwm = Adafruit_PCA9685.PCA9685() #--- add back in
@@ -33,10 +33,11 @@ Room Setup
 """
 room_state = ""
 curr_id = ''
-passcodes = {"[0]": "12345", "[1]": "dog", "[2]": "cat", "[3]": "moose"}
+passcodes = {"[0]": "12345", "[1]": "781911", "[2]": "43253416", "[3]": "MASTERY"}
 state_ids = {"[0]": "'T_Door'", "[1]": ["'P_C2 + G_BD'", "'P_C2 + G_C2'", "'P_C2 + G_End'"],
              "[2]": ["'P_PP + G_C2'", "'P_C2 + G_C2'", "'P_End + G_C2'"], "[3]": "'M_FinalC'",}
 promptingForPasscode = False
+# correctPasscode = False
 
 """
 START MQTT STUFF
@@ -370,10 +371,13 @@ def checkState():
     else:
         promptingForPasscode = False
         
-# def checkPasscode(inputCode):
-#     global room_state, passcodes
-#     if(passcodes[room_state] == inputCode):
-#         client.publish("rpi/passcode", "accepted")
+def checkPasscode():
+    global correctPasscode
+    if(correctPasscode):
+        client.publish("rpi/passcode", "accepted")
+        client.publish("rpi/aruco",curr_id)
+    else:    
+        correctPasscode = False
 #     else:
 #         client.publish("rpi/passcode", "denied")
    
@@ -384,6 +388,7 @@ def update(dt):
     
     #see if in state requiring passcode
     checkState()
+#     checkPasscode()
 #     print(room_state)
     
     #if python 3.10 or above, can use "match", works like switch statements 
@@ -489,7 +494,7 @@ import json
 
 @app.route("/sendPasscode")
 def recievePasscode():
-    global room_state, passcodes, promptingForPasscode, curr_id
+    global room_state, passcodes, promptingForPasscode, curr_id, correctPasscode
     passcodeInput = request.args.get('passcode');
     print(passcodeInput);
     data = [0,0];
@@ -501,11 +506,13 @@ def recievePasscode():
         
     if(passcodeInput == passcodes[curr_id]):
         data[1] = 1; #correct passcode
+        correctPasscode = True
     else:
         data[1] = 0; #incorrect passcode
         
-    if(data[0]==1 and data[1]==1):
+    if(data[1]==1):
         client.publish("rpi/passcode", "accepted")
+        client.publish("rpi/aruco",curr_id)
     else:
         client.publish("rpi/passcode", "denied") 
     return Response(json.dumps(data), mimetype = 'text/xml')
