@@ -22,7 +22,7 @@ import RPi.GPIO as GPIO #--- add back in
 from enum import Enum
 import paho.mqtt.client as mqtt
 
-pi_ip_address='130.215.120.229'#'localhost'
+pi_ip_address='130.215.171.221'#'localhost'
 
 # Initialise the PCA9685 using the default address (0x40).
 pwm = Adafruit_PCA9685.PCA9685() #--- add back in
@@ -38,7 +38,7 @@ state_ids = {"[0]": "'T_Door'", "[1]": ["'P_C2 + G_BD'", "'P_C2 + G_C2'", "'P_C2
              "[2]": ["'P_PP + G_C2'", "'P_C2 + G_C2'", "'P_End + G_C2'"], "[3]": "'M_FinalC'",}
 promptingForPasscode = False
 # correctPasscode = False
-
+camStepCount = 0
 """
 START MQTT STUFF
 """
@@ -384,7 +384,7 @@ def checkPasscode():
 def update(dt):
     #TODO: prevent race conditions with Flask app changing values of buttons and axes?? 
     #maybe just set local variables equal to what the values were at the beginning of update?
-    global UVToggle, flashlightToggle, magnetToggle, cam_center, buttonVals
+    global UVToggle, flashlightToggle, magnetToggle, cam_center, buttonVals, camStepCount
     
     #see if in state requiring passcode
     checkState()
@@ -423,7 +423,14 @@ def update(dt):
     if cam_center:
         centerCam()
     else:
-        turnCam()
+        #turnCam()
+        if camStepCount>=1:
+            camStepCount = 0
+            turnCam()
+        else:
+            camStepCount+=1
+            
+        
     
 #     cam.set_terminal("default")
     #TODO: use button enums for the following, rather than hardcoded numbers 
