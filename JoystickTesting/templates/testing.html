@@ -51,7 +51,7 @@ ul {
 <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-	<link rel="stylesheet" type="text/css" href= "{{ url_for('static',filename='styles/style.css') }}">><!--"style.css"-->
+	<link rel="stylesheet" type="text/css" href= "style.css">><!--"{{ url_for('static',filename='styles/style.css') }}"-->
 
 <title>Robot Escape Room MQP</title>
 </head>
@@ -71,7 +71,7 @@ ul {
 
     </script> -->
 
-<label1 for="Timer">60:00</label1>
+<label1 for="Timer"> <span id = "timeLim">45:00</span></label1>
 <h1>Escape with Robto</h1>
 <p id="demo"></p>
 <div class="container">
@@ -319,10 +319,32 @@ function getPeriphUpdates(){
 }
 
 
+//Function for counting down the room timer
+function timer(duration, display) {
+	var time = duration, minutes, seconds;
+	setInterval(function() {
+		minutes = parseInt(time/60, 10);
+		seconds = parseInt(time%60, 10);
 
+		minutes = minutes < 10 ? "0" + minutes : minutes;
+		seconds = seconds < 10 ? "0" + seconds : seconds;
 
-
-
+		display.textContent = minutes + ":" + seconds;
+		//Decrement timer and keep it at 0 once it reaches that time
+		if (--time < 0) {
+			time = 0;
+		}
+	}, 1000);
+}
+//Starts timer upon loading the webpage
+window.onload = function () {
+	//How many minutes the room has
+	var timeLimit = 45;
+	var roomTime = 60 * timeLimit;
+	//Looks for timer element to display
+	display = document.querySelector('#timeLim');
+	timer(roomTime, display); 
+}
 
 function addGamepadDebug(){
   closeDropdown();

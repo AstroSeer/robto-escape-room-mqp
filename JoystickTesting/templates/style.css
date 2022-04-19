@@ -1,0 +1,120 @@
+#content {
+    padding:3px;
+}
+
+head {
+    background: #090909;
+}
+
+body {
+    background: #090909;
+}
+
+h1 {
+    color: #006614;
+    border-style: solid;
+    border-radius: 7px;
+    font-family: "Verdana", sans-serif;
+    text-align: center;
+    margin-left: 30%;
+    margin-right: 30%;
+}
+
+p {
+    color: #006614;
+    font-family: "Verdana", sans-serif;
+    border-style: solid;
+    border-radius: 7px;
+    text-align: center;
+    margin-left: 30%;
+    margin-right: 30%;
+}
+
+img {
+    display: block;
+    border: 7px #006614;
+    border-style: solid;
+    width: 768px;
+    height: 432x;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+label {
+    color: #006614;
+    border-style: solid;
+    border-radius: 7px;
+    font-family: "Verdana", sans-serif;
+    text-align: left;
+    margin-left: 40%;
+    padding: 3px;
+}
+
+input {
+    background-color: #090909;
+    color: #006614;
+    border-color: #006614;
+    border-width: 2px;
+    margin-top: 1%;
+}
+
+input:focus {
+    border-color: #006614;
+}
+
+button {
+   border-color: #006614;
+   border-width: 3px;
+   background: #090909;
+   color: #006614;
+   text-align: center; 
+}
+
+button1 {
+    margin-left: 40%;
+}
+
+label1 {
+    color: #006614;
+    border-style: solid;
+    border-radius: 7px;
+    font-family: "Verdana", sans-serif;
+    text-align: left;
+    margin-left: 95%;
+    padding: 3px;
+}
+  
+h2 {
+    color: #006614;
+    border-style: solid;
+    border-radius: 7px;
+    font-family: "Verdana", sans-serif;
+    text-align: center;
+    margin-left: 95%;
+}
+
+h3 {
+    color: #006614;
+    border-style: solid;
+    border-radius: 7px;
+    font-family: "Verdana", sans-serif;
+    text-align: center;
+    margin-left: 95%;
+}
+
+/*
+p {
+    color: #006614;
+    font-family: "Verdana", sans-serif;
+    text-align: center;
+}
+*/
+  
+video {
+    border: 7px #006614;
+    border-style: solid;
+    border-radius: 7px;
+    margin-left: 33%;
+    position: relative;
+
+}
