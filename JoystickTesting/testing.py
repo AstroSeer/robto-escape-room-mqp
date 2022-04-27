@@ -6,6 +6,8 @@
 # Osoyoo Raspberry Pi Web Camera Control Robot Car
 # tutorial url: https://osoyoo.com/?p=32066
 
+#this file is for testing on a local computer, using localhost
+#rather than on the robot's raspberry pi
 
 #testt\Scripts\activate.bat #--- just a note for testing purposes
 
@@ -508,17 +510,6 @@ def recievePasscode():
                     # del self.listeners[i]
 @app.route("/ask")
 def responding(): 
-    #global countDebug
-    #print(countDebug)
-    #countDebug = countDebug+1;
-    
-    #text = "<bookstore><book>" + "<title>Everyday Italian</title>" + "<author>Giada De Laurentiis</author>" + "<year>2005</year>" +"</book></bookstore>";
-    
-    # if(waitingForUpdates):
-        
-    # while(!peripheralUpdates):
-        # waitingForUpdates = True;
-    # waitingForUpdates = False;
     
     data ={"peripherals": \
             {ButtonNum.UV.value: UVToggle, \
@@ -527,14 +518,6 @@ def responding():
         "prompt": promptingForPasscode,\
         "message": ""} 
         
-        #"prompt", prompting for a passcode input 
-        #"message", a message to the player to be displayed onscreen
-    #print(data)
-
-    #d['fish'] = 'wet'     # Set an entry in a dictionary
-    #print(d['fish'])      # Prints "wet"
-    
-    #return render_template('testing.html', data=data, mimetype='text/xml');
     return Response(json.dumps(data), mimetype = 'application/json')#Response(data);#, mimetype='text/xml');
    
     # UVToggle = Toggle.OFF.value
@@ -548,20 +531,6 @@ def responding():
     # EM = 6
     # LIFT_UP = 7
     # LIFT_DOWN = 8
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     
     
 @app.route("/data")
@@ -597,6 +566,7 @@ def recieve1():#buttonvals,moveAxesVal,camAxesVals):
     
     return render_template('testing.html')
     
+#pretty sure this is defunct
 @app.route("/<buttonvals>/<moveAxesVal>/<camAxesVals>")
 def recieve(buttonvals,moveAxesVal,camAxesVals):
     
