@@ -57,19 +57,7 @@ ul {
 </head>
 <body>
 
-<!-- <script language="javascript" type="text/javascript" src="/functions.js"></script>
-    <script language="javascript">
-		/*
-      function send_command(cmd) {
-        document.getElementById('hints').firstChild.nodeValue = "Send command: " + cmd;
-        AJAX_get('/?action=command&command='+ cmd)
-      }
 
-      function AJAX_response(text) {
-        document.getElementById('hints').firstChild.nodeValue = "Got response: " + text;
-      }*/
-
-    </script> -->
 
 <label1 for="Timer"> <span id = "timeLim">45:00</span></label1>
 <h1>Escape with Robto</h1>
@@ -81,11 +69,6 @@ ul {
         </div>
     </div>
 </div>
-
-<!--<h1>My First Heading</h1>
-<p>My first paragraph.</p>
-<p id="demo"></p>->
-<!--<button class = "Config" onclick="alert('You pressed the button!')">Configure Gamepads</button>-->
 
 
 <label for="passcode">Input Code:</label>
@@ -130,36 +113,7 @@ ul {
 		<button id='default'>Default</button>
 	</div>
 
-	<!--<div id = "configuration menu" style = "display:none;">
-		
-		<div class="dropdown" > <!-- select gamepad type-- >
-		  <button id = "GamepadType" class="dropbtn">Gamepad Type</button> <!--onclick="dropdownToggle('GamepadTypeDropdown')" -- >
-		  <div id="GamepadTypeDropdown" class="dropdown-content">
-			<button onclick="configure('controller')" id = "Cont">Game Controller</button>
-			<button onclick="configure('interface')" id = "Phys">Physical Interface</button>
-		  </div>
-		</div>
-
-		<div class="dropdown" <!--id = "GamepadDrop1">--> <!-- select gamepad 1-- >
-		  <button style="display:none;" id = "Gamepad1" class="dropbtn">Gamepad 1</button>
-		  <div id="Gamepad1Dropdown" class="dropdown-content">
-			<button id = "None1">None</button>
-			<!-- as many buttons as there are gamepads connected. 
-				update in the javascript section-- >
-		  
-		  </div>
-		</div>
-
-		<div class="dropdown" <!--id = "GamepadDrop2"> --><!-- select gamepad 2 -- >
-		  <button style="display:none;" id = "Gamepad2" class="dropbtn">Gamepad 2</button>
-		  <div id="Gamepad2Dropdown" class="dropdown-content">
-			<button id = "None2">None</button>
-			<!-- as many buttons as there are gamepads connected. 
-				update in the javascript section-- >
-		  </div>
-		</div>
-		<button id='default'>Default</button>
-	</div> -->
+	
 	<br>
 	<button id= "add gamepad" onclick="addGamepadDebug()">Add Gamepad</button>
 	<button id= "remove gamepad">Remove Gamepad</button>
@@ -167,7 +121,6 @@ ul {
 	<label for="periphCheckToggle">Toggle Peripheral Check (debug)</label>
 	<button id = "periphChecktoggle" onclick = "toggleText('periphChecktoggle', 'Turn On', 'Turn Off'); toggleAskUpdate()">Turn Off</button>
 </div>
-<!--<button id="button3" style="display:none;" onclick="document.getElementById('button1').style.display = 'block'; this.style.display = 'none';">Button 3</button>-->
 
 <p id = "periphStates">Periph States</p>
 <p id = "debugCodePromptInfo"></p>
@@ -233,14 +186,12 @@ function getPeriphUpdates(){
 					valid = true;
 				} catch(e) {
 					valid = false;
-					//alert(e); // error in the above string (in this case, yes)!
 				}
 			}
 			if(valid){
 			
 				var dict = JSON.parse(xmlhttp.response);
-				//console.log(dict);
-				var strin = "";//xmlhttp.responseText + "<br>";
+				var strin = "";
 				
 				var message = dict["message"];
 				if (message != ""){
@@ -260,7 +211,6 @@ function getPeriphUpdates(){
 					
 				var periphs = dict["peripherals"];
 				
-				//console.log(periphs);
 				
 				for (var key of Object.keys(periphs)){
 					var periphName = periphEnum[parseInt(key)];
@@ -269,44 +219,9 @@ function getPeriphUpdates(){
 					
 					strin = strin + periphName + " is " + toggleStatus + ". ";
 				}
-				//use ButtonNum enum to tell what peripherals each is (using the key value),
-				//and use Toggle enum to tell whether a peripheral is off or on
-				//enums in javascript?? google.
-				/*
-					class Toggle(Enum):
-						TURN_OFF = -1 #is on, next press will turn off
-						OFF = 0 # is off
-						ON = 1 #is on
-						TURN_ON = 2 #is off, next press will turn on
-						
-					UVToggle = Toggle.OFF.value
-					flashlightToggle = Toggle.OFF.value
-					magnetToggle = Toggle.OFF.value
-					liftDir = LiftDirection.NONE.value
-					
-				   class ButtonNum(Enum):
-					UV  = 3
-					FLASH = 4
-					CENTER = 5
-					EM = 6
-					LIFT_UP = 7
-					LIFT_DOWN = 8
-				*/
 				
 				
 				document.getElementById("periphStates").innerHTML = strin;
-				//xmlDoc.getElementsByTagName("title")[0].childNodes[0].nodeValue;
-				//document.getElementById("para").innerHTML = xmlhttp.responseText;
-				
-				
-				/*
-				class Toggle(Enum):
-					TURN_OFF = -1 #is on, next press will turn off
-					OFF = 0 # is off
-					ON = 1 #is on
-					TURN_ON = 2 #is off, next press will turn on
-				*/
-				//}
 			}
 		
 		}
@@ -402,40 +317,14 @@ function dropdownToggle(dropdownID) {
 
 function toggleElement(elementId){
 	var x = document.getElementById(elementId)
-	//console.log(x.style.display);
 	if (x.style.display === "none") {
 		x.style.display = "block";
     }else {
-		//console.log(x.style.display);
 		x.style.display = "none";
-		//console.log(x.style.display);
 	}
-	//console.log(x.style.display);
-	//.classList.toggle("show")
 }
 
 
-// Close the dropdown if the user clicks outside of it
-/*window.onclick = function(event) {
- // start by closing every dropdown
-  /*var dropdowns = document.getElementsByClassName("dropdown-content");
-  for (let dd of dropdowns) dd.classList.toggle("open", false);* /
-  var closing = false;
-  if(event.target.matches('.dropbtn')){
-	if(event.target.nextElementSibling.classList.contains('show')){
-		closing = true;
-	}
-  }
-  closeDropdown();
-  // then if a link was clicked, open the associated dropdown
-  if (event.target.matches('.dropbtn') && closing == false) {
-    event.target.nextElementSibling.classList.toggle("show");
-  }
-  /*
-  if (!event.target.matches('.dropbtn')) {
-    closeDropdown();
-  }* /
-}*/
 
 function closeDropdown(){
 	var dropdowns = document.getElementsByClassName("dropdown-content");
@@ -468,17 +357,7 @@ function addgamepad(gamepad) {
   controllers[gamepad.index] = gamepad; // adds GamePad gamepad to controllers array, in index of gamepad's index
 
 
-  //var drop1 = document.getElementById("GamepadDrop1");
-  //var drop2 = document.getElementById("GamepadDrop2");
   
-  
-  /*var drops = [document.getElementById("GamepadDrop1"), document.getElementById("GamepadDrop2")];
-  var num = 0;
-  while(num < 2){
-	var drop = drops[num];
-	var gamepadBut = document.createElement("button");
-	gamepadBut.setAttribute("id", 
-  }*/
   
   
   var d = document.createElement("div");
@@ -595,20 +474,6 @@ function updateStatus() {
 
 	//buttons
 	
-	//todo: need to account for gamepad vs physical interface
-	
-	//for physical interface,
-	//need to account for some buttons being on one "controller"
-	//and some being on the other
-	
-	//physical interface:
-	//9 buttons
-	//left controller: 3 buttons
-	//right controller: 6 buttons
-	
-	
-	//for now: assuming game controller
-	//will break if use physical 
 	
 	
 	/*xbox button layout: (expand to see)
@@ -631,28 +496,15 @@ function updateStatus() {
 	//home = 16
 	*/
 	
-	//wait, does the physical interface even have "buttons", 
-	//or does it treat them all as axes?
-	//if the latter, need to rework code in axes part to account for this
-	
-	
-	//todo: tell when a button val has changed (like with axes), to know when to send message
-    //axesUpdated, but for buttons
-	
-	
-	//todo: tell when axes or buttons updated, updated variable
-	//after, work out how to differentiate button press from toggle from hold on this end?
 	for (i = 0; i < controller.buttons.length; i++) {
 		if(!usingGameController && ((i > 2 && controllerCount == 1) || (i >5 && controllerCount == 2))){
 			//left joystick: movement, 3 buttons.
 			//right joystick: camera, 6 buttons.
-			//console.log("inside using phys int");
 			break;
 		}else if(usingGameController && i>8){
 			break;
 		}
-		//console.log("controllerCount: " + controllerCount);
-		//console.log(controller.buttons.length); game controller: 17
+		
       var b = buttons[i];
       var val = controller.buttons[i];
       var pressed = val == 1.0;
@@ -672,20 +524,12 @@ function updateStatus() {
         b.className = "button";
       }
 	  if(buttonVals[buttonNum] != tempButtonVal){
-		//console.log("button val: " + buttonVals[buttonNum] + ", tempButtonVal: " + tempButtonVal);
 		valsUpdated = true;
 		valsUpdatedGlob = true;
 	  }
 	  buttonVals[buttonNum] = tempButtonVal;
 	  buttonNum+=1;
     }
-	/*countPrint+=1;
-	if(countPrint == 100){//prints once every 100 loops
-		countPrint = 0;
-		//console.log("button values: " + buttonVals);
-		//console.log(buttonVals.join('') + '/' + axesDirs[0].join(' ') + '/' + axesDirs[1].join(' ')); //creates a string out of array
-
-	}*/
 	
 	//axes
 	
@@ -700,15 +544,6 @@ function updateStatus() {
 		if(!usingGameController && i>1){
 			break;
 		}
-		//var axesUpdated = false;
-		//var movAxesUpdate = false;
-		/*if(i>1){
-			if(i>3 || j>0){
-				break;
-			}else{
-				usingGameController = true;
-			}
-		}*/
 		
 		
 		
@@ -719,49 +554,12 @@ function updateStatus() {
 		const i_plus = i+1;
 		a2.innerHTML = i_plus + ": " + controller.axes[i+1].toFixed(4);
 		a2.setAttribute("value", controller.axes[i+1] + 1);
-		/*if(j == 0 && i<2){//movement
-			if(controller.axes[i]>0.2){
-				if(i == 0){
-					axis0 = 1;
-				}else if(i==1){
-					moveAxis(j, axis0, 1);//forward();
-				}
-			}else if(controller.axes[i]<-0.2){
-				if(i == 0){
-					axis0 = -1;
-				}else if(i == 1){
-					moveAxis(j, axis0, -1);//backward();
-				}
-			}
-			else{
-				if(i == 1){
-					moveAxis(j, axis0, 0);
-				}
-			}
-			
-			
-		}if(j==1 || (usingGameController && i>1 && j==0)){
-			var axisNum = i;
-			if(usingGameController){
-				axisNum -= 2;
-			}
-			
-			if(controller.axes[i]>0.2){
-				moveAxis(1, axisNum, 1);
-			}else if(controller.axes[i]<-0.2){
-				moveAxis(1, axisNum, -1);
-			}else{
-				moveAxis(1, axisNum, 0);
-			}
-			
-			
-		}*/
+		
 		var axesSetNum = controllerCount-1; //0 is movement, 1 is camera
 		if(usingGameController && i>1){
 			axesSetNum = 1;
 		}
 		
-		//var axesVals = [];
 		var prevVals = axesDirs[axesSetNum];
 		var count;
 		for(count = 0; count < 2; count++){
@@ -788,100 +586,16 @@ function updateStatus() {
 			}
 		}
 		
-		/*if(axesUpdated){
-			//console.log("axesSetNum: " + axesSetNum + ", axisDirs: " + axesDirs[0][0] + ", " + axesDirs[0][1] + ", " + axesDirs[1][0] + ", " + axesDirs[1][1])
-			//axesDirs[axesSetNum][0] = axesVals[0];
-			//axesDirs[axesSetNum][1] = axesVals[1];
-			
-			moveAxis(axesSetNum, axesDirs[axesSetNum][0], axesDirs[axesSetNum][1]);
-		}*/
-
-
-		//if(j == 0){// && i<2){//movement
-			//var contNum = j;
-			//var axisNum = i;
-			
-			
-			
-			/*if(i>1){
-				if(usingGameController){
-					axisNum -= 2;
-					
-					contNum = 1;
-				}else{
-					break;
-				}
-			}else if(j==1){
-				
-			}*/
-			
-			/*
-			if(controller.axes[i]>0.2){
-				if(axisNum == 0){
-					if(
-					axis0 = 1;
-				}else if(axisNum==1){
-					moveAxis(contNum, axis0, 1);//forward();
-				}
-			}else if(controller.axes[i]<-0.2){
-				if(axisNum == 0){
-					axis0 = -1;
-				}else if(axisNum == 1){
-					moveAxis(contNum, axis0, -1);//backward();
-				}
-			}
-			else{
-				if(axisNum == 1){
-					moveAxis(contNum, axis0, 0);
-				}
-			}
-			
-			
-			if(i==1){
-				axis0 = 0;
-			}*/
-			
-		//}
-	  //camAxesUpdated
-	  //movAxesUpdated
-	  //only send xml request if the respective axes have been updated
-	  //can tell if been updated if the new values are dif than the stored values.
 	  
 	  
     }
   }
-	/*if(buttonsUpdated){
 	
-		console.log(buttonVals.join('') + '/' + axesDirs[0].join('') + '/' + axesDirs[1].join('')); //creates a string out of array
-	}*/
-
-	//updateLoopCount+=1;
-	/*
-	if(false && updateLoopCount == updateLoopMax){//updates once every 5 loops
-		updateLoopCount = 0;
-		if(valsUpdatedGlob){
-			sendVals();
-			valsUpdatedGlob = false;
-		}
-		//console.log("button values: " + buttonVals);
-		//console.log(buttonVals.join('') + '/' + axesDirs[0].join(' ') + '/' + axesDirs[1].join(' ')); //creates a string out of array
-
-	}*/
 	
 	if(valsUpdated){
-		//console.log(buttonVals.join('') + '/' + axesDirs[0].join('') + '/' + axesDirs[1].join('')); //creates a string out of array
 		sendVals();
-		// make it so that can only send vals once every 5 loops? 
-		//as in, always counting, can only send on the fifth loop, but still stores values on the other 4
-		//that way, pressing a button and then another button within 4 loops would only send 1 update, with both button updates 
-		//if pressed and let go within the 5 loop period, input is removed, but nobody needs to press it that fast? 
-		//could cause weird delay with axes though, 0-4 loop delay.
-		//maybe only implement this if there ends up being too many requests sent.
-		//CAN ALSO PLAYTEST DIFFERENT VERSIONS, one with this delay implemented, one without
-		//if neither works, look into hosting on a web server? can handle requests much faster. flask freeze, host on github?
-	
+		
 	}
-	//console.log(" ");
   requestAnimationFrame(updateStatus);
   /*ANIMATIONFRAME, TODO
   https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame
@@ -934,41 +648,9 @@ if (!haveEvents) {
 }
 
 
-/*function forward()
-{
-	xmlhttp.open("GET","move/forward",true);
-	xmlhttp.send();
-}*/
-
-/*
-for button values,
-console.log(buttonVals.join(''); //creates a string out of array
-can join the button vals into a string, then send the string to the python file
-can also do this with axes! and instead of "for_right" and whatnot,
-just send the numbers, (all values, axes and buttons) as a string,
-can parse in python file by just determining the values at each index of the string
-
-*********************************************************************
-e.g. cmd = buttonVals.join('') + axesDirs[0].join('')+axesDirs[1].join('');
-*********************************************************************
-need to adjust for the action var
-make a new "moveAxis" function, sendVals
-
-alternatively, maybe can figure out direction on the html end
- (eg for_right for move, center for camx and up for camy),
-then pass the enum value to the python file? so less data to pass?
-	also wouldn't have to deal with possibility of multiple directions at once?
-
-*/
 
 function sendVals(){
-	//moveAxis(0,0,0);
-	//return;
-	// cmd = buttonVals.join('') + axesDirs[0].join('')+axesDirs[1].join('');
-	//console.log("sending vals: " + buttonVals.join('') + '/' + axesDirs[0].join(' ') + '/' + axesDirs[1].join(' ')); //creates a string out of array
-	//maybe have html determine movement axes values, send that (e.g. send "2" for FOR_RIGHT, etc)
-	//instead of having python file determine it on python's end?
-	//only need for carDirection
+	
 /*
 class CarDirection(Enum):
     NONE = 0
@@ -1216,58 +898,10 @@ function moveAxis(gamepad, xAxis, yAxis)//val_1, val_2)
 			xmlhttp.timeout = 600;
 			xmlhttp.ontimeout = function () { blah("moveAxis");}
 			xmlhttp.send();
-			//sample(100);
-			/*for(var a = 0; a < 300; a++){
-			}*/
-			/*var timedOut = false;
-			setTimeout(function(){
-				timedOut = true;
-			}, 100); 
-			while(!timedOut){
-				console.log("jkl;");
-			}*/
+			
 		}
 		
-	//}
-	/*else if(gamepad==1){
-		var axisNum = val_1;//x is 0, y is 1?
-		var direction = val_2;
-		
-
-		if(axisNum == 0){
-			//console.log("axisNum: " + axisNum);
-			/*xmlhttp.open("GET","xAxis/right",true);
-			xmlhttp.send();
-			return;* /
-			if(direction>0){
-				xmlhttp.open("GET","camera/right",true);
-				xmlhttp.send();
-			}else if(direction<0){
-				xmlhttp.open("GET","camera/left",true);
-				xmlhttp.send();
-			}else{
-				xmlhttp.open("GET","camera/centerX",true);
-				xmlhttp.send();
-			}
-		}else{
-			//console.log("axisNum: " + axisNum);
-			/*xmlhttp.open("GET","yAxis/right",true);
-			xmlhttp.send();
-			return;* /
-			if(direction<0){
-				xmlhttp.open("GET","camera/up",true);
-				xmlhttp.send();
-			}else if(direction>0){
-				xmlhttp.open("GET","camera/down",true);
-				xmlhttp.send();
-			}else{
-				xmlhttp.open("GET","camera/centerY",true);
-				xmlhttp.send();
-			}
-		}
-		
-		
-	}*/
+	
 }
 function delay(delayInms) {
   return new Promise(resolve => {
